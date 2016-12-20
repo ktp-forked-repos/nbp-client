@@ -8,6 +8,6 @@
     mc:Ignorable="d">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-
+        <ProgressRing Name="currencieProgresRing"  IsActive="True" Height="100" Width="100" Foreground="Blue"/>
     </Grid>
 </Page>
