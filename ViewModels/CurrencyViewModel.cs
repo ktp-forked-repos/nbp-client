@@ -12,4 +12,17 @@ namespace NBPClient.ViewModels
         public decimal Value { get; set; }
         public DateTime Date { get; set; }
     }
+    public class CurrencyModel
+    {
+        public string Currency { get; set; }
+        public decimal Mid { get; set; }
+        public string Code { get; set; }
+    }
+    public class TableModel
+    {
+        public string Table { get; set; }
+        public string No { get; set; }
+        public DateTime effectiveDate { get; set; }
+        public List<CurrencyModel> Rates { get; set; }
+    }
 }
