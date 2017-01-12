@@ -15,8 +15,25 @@ namespace NBPClient.ViewModels
     public class CurrencyModel
     {
         public string Currency { get; set; }
+        
         public decimal Mid { get; set; }
         public string Code { get; set; }
+    }
+    public class RateMode
+    {
+        public string No { get; set; }
+
+        public double Bid { get; set; }
+        public double Ask { get; set; }
+        public DateTime EffectiveDate { get; set; }
+        public string Code { get; set; }
+    }
+    public class TableModel2
+    {
+        public string Table { get; set; }
+        public string Currency { get; set; }
+        public string Code { get; set; }
+        public List<RateMode> Rates { get; set; }
     }
     public class TableModel
     {
