@@ -7,9 +7,13 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
-
+    <Page.TopAppBar>
+        <CommandBar  >
+            <AppBarToggleButton Click="AppBarToggleButton_Click" Icon="Edit" Label="Repeat"/>
+        </CommandBar>
+    </Page.TopAppBar>
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-
+     
 
         <ListView ItemClick="ListView_ItemClick_1"  ItemsSource="{x:Bind ViewModel.Currencies}"
     HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -26,7 +30,9 @@
             </ListView.ItemTemplate>
         </ListView>
         <Button x:Name="button" Content="Button" HorizontalAlignment="Left" Margin="478,138,0,0" VerticalAlignment="Top" Click="button_Click"/>
-
+        <StackPanel Orientation="Vertical">
         <CalendarDatePicker DateChanged="CalendarDatePicker_DateChanged" ></CalendarDatePicker>
+        <TextBlock x:Name="dateErrorTextBlock" />
+</StackPanel>
     </Grid>
 </Page>

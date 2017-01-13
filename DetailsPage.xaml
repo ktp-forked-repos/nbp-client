@@ -7,16 +7,31 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
-
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Page.TopAppBar>
+        <CommandBar  >
+            <AppBarToggleButton Click="AppBarToggleButton_Click_1" Icon="Back" Label="Repeat"/>
+            <AppBarToggleButton Click="AppBarToggleButton_Click_2" Icon="Delete" Label="Repeat"/>
+        </CommandBar>
+    </Page.TopAppBar>
+    <StackPanel Orientation="Vertical">
+        <ProgressBar Width="200"                               
+Foreground="#FF8B64C3"
+Value="20" 
+Maximum="100" 
+BorderBrush="#FF411F72" 
+BorderThickness="1"/>
         <Charting:Chart x:Name="LineChart" HorizontalAlignment="Center" VerticalAlignment="Top" Width="600" Height="400">
-            
+
             <Charting:LineSeries Title="Currecy" Margin="0"  IndependentValuePath="EffectiveDate" DependentValuePath="Bid" IsSelectionEnabled="True"/>
         </Charting:Chart>
-        <!--<CalendarDatePicker DateChanged="StartDateChanged"></CalendarDatePicker>
-        <CalendarDatePicker DateChanged="EndDateChanged"></CalendarDatePicker>
+        <local:CustomCalendarDatePicker DateChanged="StartDateChanged"  Header="Start date"  ></local:CustomCalendarDatePicker>
+        <CalendarDatePicker DateChanged="EndDateChanged" Header="End date" RenderTransformOrigin="0,1"></CalendarDatePicker>
         <Button Click="Button_Click" Name="Nav"  />
-        <Button x:Name="button" Content="Button" HorizontalAlignment="Left" Margin="478,138,0,0" VerticalAlignment="Top" Click="button_Click_1"/>-->
-    </Grid>
-
+        <Button x:Name="button" Content="Button" HorizontalAlignment="Left" Margin="478,138,0,0" VerticalAlignment="Top" Click="button_Click_1"/>
+    </StackPanel>
+    <Page.BottomAppBar>
+        <CommandBar  >
+            <AppBarToggleButton Click="AppBarToggleButton_Click" Icon="Save" Label="Repeat"/>
+        </CommandBar>
+    </Page.BottomAppBar>
 </Page>

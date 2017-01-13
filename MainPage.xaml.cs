@@ -47,7 +47,7 @@ namespace NBPClient
             var res = await  WebServiceConsumer.GetCurrency("http://api.nbp.pl/api/exchangerates/tables/a/" + s, onDataComplete);
             foreach(var item in res)
             {
-                this.ViewModel.Currencies.Add(item);
+                this.ViewModel.Currencies.Add(item);    
             }
 
         }
@@ -63,7 +63,17 @@ namespace NBPClient
 
         private void CalendarDatePicker_DateChanged(CalendarDatePicker sender, CalendarDatePickerDateChangedEventArgs args)
         {
-            this.GetCurrencies(sender.Date.Value.Date);
+
+            if (sender.Date.Value.Date > new DateTime(2002, 9, 22) && sender.Date.Value.Date <= DateTime.Now)
+            {
+                dateErrorTextBlock.Text = "";
+                this.GetCurrencies(sender.Date.Value.Date);
+            }
+            else
+            {
+                dateErrorTextBlock.Text = "Wrong date! Choose date starting from 23 Sep 2002";
+
+            }
         }
 
         private void ListView_ItemClick(object sender, ItemClickEventArgs e)
@@ -79,6 +89,11 @@ namespace NBPClient
         private void button_Click(object sender, RoutedEventArgs e)
         {
             this.Frame.Navigate(typeof(DetailsPage));
+        }
+
+        private void AppBarToggleButton_Click(object sender, RoutedEventArgs e)
+        {
+            Application.Current.Exit();
         }
     }
     public class Page1ViewModel

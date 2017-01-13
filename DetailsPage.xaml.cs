@@ -43,20 +43,21 @@ namespace NBPClient
         private async void DetailsPage_Loaded(object sender, RoutedEventArgs e)
         {
             LoadChartContents();
-            cts = new CancellationTokenSource();
+            
+            //cts = new CancellationTokenSource();
 
-            try
-            {
-                await AccessTheWebAsync(cts.Token);
-            }
-            catch (OperationCanceledException)
-            {
-            }
-            catch (Exception)
-            {
-            }
+            //try
+            //{
+            //    await AccessTheWebAsync(cts.Token);
+            //}
+            //catch (OperationCanceledException)
+            //{
+            //}
+            //catch (Exception)
+            //{
+            //}
 
-            cts = null;
+            //cts = null;
             // GetCurrencySet();
         }
         private void LoadChartContents()
@@ -103,12 +104,26 @@ namespace NBPClient
         private void StartDateChanged(CalendarDatePicker sender, CalendarDatePickerDateChangedEventArgs args)
         {
             this.ViewModel.StartDate = sender.Date.Value.Date;
-            this.GetCurrencySet();
+          //  this.GetCurrencySet();
         }
 
-        private void EndDateChanged(CalendarDatePicker sender, CalendarDatePickerDateChangedEventArgs args)
+        private  async void EndDateChanged(CalendarDatePicker sender, CalendarDatePickerDateChangedEventArgs args)
         {
             this.ViewModel.EndDate = sender.Date.Value.Date;
+            cts = new CancellationTokenSource();
+
+            try
+            {
+                await AccessTheWebAsync(cts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception)
+            {
+            }
+
+            cts = null;
         }
         public async void GetCurrencySet()
         {
@@ -125,7 +140,7 @@ namespace NBPClient
                 {
                     
                     this.ViewModel.Currencies.Add(item);
-                    await Task.Delay(TimeSpan.FromMilliseconds(300));
+                   // await Task.Delay(TimeSpan.FromMilliseconds(10));
                 }
             }
         }
@@ -134,6 +149,7 @@ namespace NBPClient
         {
             public DetailsPageViewModel()
             {
+              
             }
             private ObservableCollection<RateMode> currencies = new ObservableCollection<RateMode>();
             public ObservableCollection<RateMode> Currencies { get { return this.currencies; } }
@@ -151,7 +167,7 @@ namespace NBPClient
             HttpClient client = new HttpClient();
 
             // Make a list of web addresses.  
-            List<string> urlList = SetUpURLList();
+            List<string> urlList = SetUpURLList(GetIntervals());
 
             // ***Create a query that, when executed, returns a collection of tasks.  
             IEnumerable<Task<List<RateMode>>> downloadTasksQuery =
@@ -174,8 +190,9 @@ namespace NBPClient
                 var res2 = await firstFinishedTask;
                 foreach(var item in res2) {
                      ViewModel.Currencies.Add(item);
-                    await Task.Delay(TimeSpan.FromMilliseconds(300));
+
                 }
+                await Task.Delay(TimeSpan.FromMilliseconds(300));
             }
         }
         async Task<List<RateMode>> ProcessURL(string url, HttpClient client, CancellationToken ct)
@@ -192,24 +209,44 @@ namespace NBPClient
 
             return list.Rates;
         }
-        private List<string> SetUpURLList()
+        private List<string> SetUpURLList(List<int> intervals)
         {
-            List<string> urls = new List<string>
-             {
-                "http://api.nbp.pl/api/exchangerates/rates/c/usd/2008-01-01/2008-01-31?format=json",
-                "http://api.nbp.pl/api/exchangerates/rates/c/usd/2009-01-01/2009-01-31?format=json",
-                 "http://api.nbp.pl/api/exchangerates/rates/c/usd/2010-01-01/2010-12-31?format=json",
-                //"http://api.nbp.pl/api/exchangerates/rates/c/usd/2011-01-01/2011-12-31?format=json",
-                //"http://api.nbp.pl/api/exchangerates/rates/c/usd/2012-01-01/2012-12-31?format=json",
-                //"http://api.nbp.pl/api/exchangerates/rates/c/usd/2013-01-01/2013-12-31?format=json",
-                //"http://api.nbp.pl/api/exchangerates/rates/c/usd/2014-01-01/2014-12-31?format=json",
-                //"http://api.nbp.pl/api/exchangerates/rates/c/usd/2015-01-01/2015-12-31?format=json",
-                //"http://api.nbp.pl/api/exchangerates/rates/c/usd/2016-01-01/2016-12-31?format=json",
-             };
+
+            int totalNumOfDays = 0;
+            List<string> urls = new List<string>();
+            for (int i = 0; i < intervals.Count; i++)
+            {
+
+                urls.Add("http://api.nbp.pl/api/exchangerates/rates/c/usd/"
+                    + this.ViewModel.StartDate.AddDays(totalNumOfDays).ToString("yyyy-MM-dd")
+                    + "/" + (this.ViewModel.StartDate.AddDays(totalNumOfDays + intervals[i])).ToString("yyyy-MM-dd")
+                    + "?format=json");
+                totalNumOfDays += intervals[i];
+            }
+
             return urls;
         }
+        private List<int> GetIntervals()
+        {
+            double totalDays = (this.ViewModel.EndDate - this.ViewModel.StartDate).TotalDays;
+            var lista = new List<int>();
+            if (totalDays > 365)
+            {
+                while (totalDays > 365)
+                {
+                    lista.Add(365);
+                    totalDays -= 365;
+                }
+                lista.Add(System.Convert.ToInt32(totalDays));
+                return lista;
 
-       
+            }
+            else
+            {
+                return new List<int> { System.Convert.ToInt32(Math.Ceiling(totalDays)) };
+            }
+        }
+
         private void cancelSet(object sender, RoutedEventArgs e)
         {
             if (cts != null)
@@ -217,5 +254,24 @@ namespace NBPClient
                 cts.Cancel();
             }
         }
+
+        private void AppBarToggleButton_Click(object sender, RoutedEventArgs e)
+        {
+
+
+
+        }
+
+        private void AppBarToggleButton_Click_1(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void AppBarToggleButton_Click_2(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
+
+  
 }
