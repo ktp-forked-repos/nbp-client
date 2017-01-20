@@ -22,6 +22,7 @@ namespace NBPClient.ViewModels
     public class RateMode
     {
         public string No { get; set; }
+        public string TableName { get; set; }
 
         public double Bid { get; set; }
         public double Ask { get; set; }

@@ -1,4 +1,5 @@
-﻿using NBPClient.ViewModels;
+﻿using NBPClient.Parameters;
+using NBPClient.ViewModels;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -20,8 +21,6 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 
-// The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
-
 namespace NBPClient
 {
     /// <summary>
@@ -34,6 +33,7 @@ namespace NBPClient
             this.InitializeComponent();
             this.ViewModel = new Page1ViewModel();
             this.GetCurrencies(DateTime.Now);
+           
        
 
         }
@@ -42,12 +42,19 @@ namespace NBPClient
         {
             ///  string d = data.ToFileTimeUtc().ToString("yyyy-MM-dd");
             this.ViewModel.Currencies.Clear();
-           
+           /// data = new DateTime(2016, 1, 1);
             string s = data.ToString("yyyy-MM-dd");
             var res = await  WebServiceConsumer.GetCurrency("http://api.nbp.pl/api/exchangerates/tables/a/" + s, onDataComplete);
-            foreach(var item in res)
+            if (res.Count == 0)
             {
-                this.ViewModel.Currencies.Add(item);    
+                dateErrorTextBlock.Text = "No data for this date " + data.ToString("yyyy-MM-dd") + "choose diffrent date";
+            }
+            else
+            {
+                foreach (var item in res)
+                {
+                    this.ViewModel.Currencies.Add(item);
+                }
             }
 
         }
@@ -64,7 +71,7 @@ namespace NBPClient
         private void CalendarDatePicker_DateChanged(CalendarDatePicker sender, CalendarDatePickerDateChangedEventArgs args)
         {
 
-            if (sender.Date.Value.Date > new DateTime(2002, 9, 22) && sender.Date.Value.Date <= DateTime.Now)
+            if (sender.Date.Value.Date > new DateTime(2002,1, 1) && sender.Date.Value.Date <= DateTime.Now)
             {
                 dateErrorTextBlock.Text = "";
                 this.GetCurrencies(sender.Date.Value.Date);
@@ -81,15 +88,20 @@ namespace NBPClient
 
         }
 
-        private void ListView_ItemClick_1(object sender, ItemClickEventArgs e)
+        private void CurrencySelectedItemClick(object sender, ItemClickEventArgs e)
         {
-            var a = 10;
+            this.Frame.Navigate(typeof(DetailsPage));
         }
 
         private void button_Click(object sender, RoutedEventArgs e)
         {
-            this.Frame.Navigate(typeof(DetailsPage));
-        }
+            ListViewItem item = (ListViewItem)sender;
+            this.Frame.Navigate(typeof(DetailsPage), new DetailPageParametersModel()
+            {
+                Table ="a",
+                CurrencyCode = "USD"
+            });
+        }   
 
         private void AppBarToggleButton_Click(object sender, RoutedEventArgs e)
         {
@@ -112,17 +124,24 @@ namespace NBPClient
         {
             string prod = "";
             HttpResponseMessage response = await client.GetAsync(path);
-            if (response.IsSuccessStatusCode)
+
+            if(response.StatusCode == System.Net.HttpStatusCode.NotFound) { 
+                return new List<CurrencyModel>();
+            }
+            else
             {
+
                 prod = await response.Content.ReadAsStringAsync();
                 onComplete();
+                var a = prod;
+
+                var json = JArray.Parse(a)[0].ToString();
+                var list = JsonConvert.DeserializeObject<TableModel>(json);
+
+                return list.Rates;
             }
-            var a = prod;
            
-            var json = JArray.Parse(a)[0].ToString();
-            var list = JsonConvert.DeserializeObject<TableModel>(json);
            
-            return list.Rates;
         }
         public static async Task<List<RateMode>> GetCurrencySet(string path, Action onComplete)
         {

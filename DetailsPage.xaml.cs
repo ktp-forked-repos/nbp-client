@@ -1,24 +1,31 @@
-﻿using NBPClient.ViewModels;
+﻿using NBPClient.Parameters;
+using NBPClient.ViewModels;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Graphics.Imaging;
+using Windows.UI.Composition;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
+using Windows.UI.Xaml.Shapes;
 using WinRTXamlToolkit.Controls.DataVisualization.Charting;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
@@ -30,20 +37,29 @@ namespace NBPClient
     /// </summary>
     public sealed partial class DetailsPage : Page
     {
-        private DetailsPageViewModel ViewModel;
+        public  DetailsPageViewModel ViewModel;
+        public DetailPageParametersModel parameters;
         CancellationTokenSource cts;
         public DetailsPage()
         {
-            this.ViewModel = new DetailsPageViewModel();
+           
             this.InitializeComponent();
+            this.ViewModel = new DetailsPageViewModel();
+            //  this.DataContext = new DetailsPageViewModel();
             this.Loaded += DetailsPage_Loaded;
-        
-        }
 
+
+        }
+        protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
+        {
+            base.OnNavigatingFrom(e);
+            parameters = (DetailPageParametersModel)e.Parameter;
+
+        }
         private async void DetailsPage_Loaded(object sender, RoutedEventArgs e)
         {
             LoadChartContents();
-            
+         
             //cts = new CancellationTokenSource();
 
             //try
@@ -114,7 +130,7 @@ namespace NBPClient
 
             try
             {
-                await AccessTheWebAsync(cts.Token);
+                await AccessTheWebAsync(cts.Token, det);
             }
             catch (OperationCanceledException)
             {
@@ -125,36 +141,66 @@ namespace NBPClient
 
             cts = null;
         }
-        public async void GetCurrencySet()
-        {
-            if (ViewModel.StartDate != null && ViewModel.EndDate != null)
-            {
-                // var res = WebServiceConsumer.GetCurrencySet("http://api.nbp.pl/api/exchangerates/rates/c/usd/2016-04-04/2016-05-04/?format=json", "usd", () => { });
+        //public async void GetCurrencySet()
+        //{
+        //    if (ViewModel.StartDate != null && ViewModel.EndDate != null)
+        //    {
+        //        // var res = WebServiceConsumer.GetCurrencySet("http://api.nbp.pl/api/exchangerates/rates/c/usd/2016-04-04/2016-05-04/?format=json", "usd", () => { });
 
-                ///  string d = data.ToFileTimeUtc().ToString("yyyy-MM-dd");
-                this.ViewModel.Currencies.Clear();
+        //        ///  string d = data.ToFileTimeUtc().ToString("yyyy-MM-dd");
+        //        this.ViewModel.Currencies.Clear();
 
-                var res = await WebServiceConsumer.GetCurrencySet("http://api.nbp.pl/api/exchangerates/rates/c/usd/2008-01-01/2008-01-31?format=json", () => { });
-                Random rand = new Random();
-                foreach (var item in res)
-                {
+        //        var res = await WebServiceConsumer.GetCurrencySet("http://api.nbp.pl/api/exchangerates/rates/c/usd/2008-01-01/2008-01-31?format=json", () => { });
+        //        Random rand = new Random();
+        //        foreach (var item in res)
+        //        {
                     
-                    this.ViewModel.Currencies.Add(item);
-                   // await Task.Delay(TimeSpan.FromMilliseconds(10));
-                }
-            }
-        }
+        //            this.ViewModel.Currencies.Add(item);
+        //           // await Task.Delay(TimeSpan.FromMilliseconds(10));
+        //        }
+        //    }
+        //}
 
-        public class DetailsPageViewModel
+        public class DetailsPageViewModel: INotifyPropertyChanged
         {
             public DetailsPageViewModel()
             {
-              
+                ProgressBardProgess = 0D;
             }
             private ObservableCollection<RateMode> currencies = new ObservableCollection<RateMode>();
             public ObservableCollection<RateMode> Currencies { get { return this.currencies; } }
             public DateTime StartDate { get; set; }
             public DateTime EndDate { get; set; }
+            public double ProgressBardProgess
+            {
+                get { return _ProgressBardProgess; }
+                set
+                {
+                    _ProgressBardProgess = value;
+                    OnPropertyChanged();
+                }
+            }
+            private double _ProgressBardProgess;
+            public event PropertyChangedEventHandler PropertyChanged = delegate { };
+
+
+            protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+            {
+
+                if (PropertyChanged != null)
+                {
+                    PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+                }
+            }
+
+            public  void CurrenciesSet(List<RateMode> res2)
+            {
+                foreach (var item in res2)
+                {
+                    this.Currencies.Add(item);
+                }
+                OnPropertyChanged();
+            }
         }
 
         public class FinancialStuff
@@ -165,43 +211,47 @@ namespace NBPClient
         async Task AccessTheWebAsync(CancellationToken ct)
         {
             HttpClient client = new HttpClient();
-
-            // Make a list of web addresses.  
             List<string> urlList = SetUpURLList(GetIntervals());
-
-            // ***Create a query that, when executed, returns a collection of tasks.  
-            IEnumerable<Task<List<RateMode>>> downloadTasksQuery =
-                from url in urlList select ProcessURL(url, client, ct);
-
-            // ***Use ToList to execute the query and start the tasks.   
-            List<Task<List<RateMode>>> downloadTasks = downloadTasksQuery.ToList();
-
-            // ***Add a loop to process the tasks one at a time until none remain.  
+             IEnumerable<Task<List<RateMode>>> downloadTasksQuery =
+            from url in urlList select ProcessURL(url, client, ct);
+            this.ViewModel.ProgressBardProgess = 0;
+            double progressBarInterval = Math.Ceiling(100D / downloadTasksQuery.Count());
+             List<Task<List<RateMode>>> downloadTasks = downloadTasksQuery.ToList();
+           
             while (downloadTasks.Count > 0)
             {
-                // Identify the first task that completes.  
                 Task<List<RateMode>> firstFinishedTask = await Task.WhenAny(downloadTasks);
 
-                // ***Remove the selected task from the list so that you don't  
-                // process it more than once.  
                 downloadTasks.Remove(firstFinishedTask);
-
-                // Await the completed task.  
                 var res2 = await firstFinishedTask;
-                foreach(var item in res2) {
-                     ViewModel.Currencies.Add(item);
-
+                this.ViewModel.CurrenciesSet(res2);
+                await Task.Delay(TimeSpan.FromMilliseconds(1));
+                if (this.ViewModel.ProgressBardProgess + progressBarInterval <= 100)
+                {
+                    this.ViewModel.ProgressBardProgess += progressBarInterval;
                 }
-                await Task.Delay(TimeSpan.FromMilliseconds(300));
+                else
+                {
+                    this.ViewModel.ProgressBardProgess = 100;
+                }
+                // Await the completed task.  
+               
+                //foreach(var item in res2) {
+                //     ViewModel.CurrenciesAdd(item);
+
+                // await Task.Delay(TimeSpan.FromMilliseconds(10));
+
+                // }
+
+
             }
         }
         async Task<List<RateMode>> ProcessURL(string url, HttpClient client, CancellationToken ct)
         {
-            // GetAsync returns a Task<HttpResponseMessage>.   
             HttpResponseMessage response = await client.GetAsync(url, ct);
+            
 
 
-            // Retrieve the website contents from the HttpResponseMessage.  
             string a  = await response.Content.ReadAsStringAsync();
 
             var json = JObject.Parse(a).ToString();
@@ -217,7 +267,7 @@ namespace NBPClient
             for (int i = 0; i < intervals.Count; i++)
             {
 
-                urls.Add("http://api.nbp.pl/api/exchangerates/rates/c/usd/"
+                urls.Add("http://api.nbp.pl/api/exchangerates/rates/" +parameters.Table +"/" + parameters.CurrencyCode  + "/"
                     + this.ViewModel.StartDate.AddDays(totalNumOfDays).ToString("yyyy-MM-dd")
                     + "/" + (this.ViewModel.StartDate.AddDays(totalNumOfDays + intervals[i])).ToString("yyyy-MM-dd")
                     + "?format=json");
@@ -230,12 +280,12 @@ namespace NBPClient
         {
             double totalDays = (this.ViewModel.EndDate - this.ViewModel.StartDate).TotalDays;
             var lista = new List<int>();
-            if (totalDays > 365)
+            if (totalDays > 10)
             {
-                while (totalDays > 365)
+                while (totalDays > 10)
                 {
-                    lista.Add(365);
-                    totalDays -= 365;
+                    lista.Add(10);
+                    totalDays -= 10;
                 }
                 lista.Add(System.Convert.ToInt32(totalDays));
                 return lista;
@@ -255,19 +305,27 @@ namespace NBPClient
             }
         }
 
-        private void AppBarToggleButton_Click(object sender, RoutedEventArgs e)
+        private  async Task AppBarToggleButton_Click(object sender, RoutedEventArgs e)
         {
-
-
+          
 
         }
 
         private void AppBarToggleButton_Click_1(object sender, RoutedEventArgs e)
         {
-
+            Frame rootFrame = Window.Current.Content as Frame;
+            if (rootFrame.CanGoBack)
+            {
+                rootFrame.GoBack();
+            }
         }
 
         private void AppBarToggleButton_Click_2(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void AppBarToggleButton_Click_3(object sender, RoutedEventArgs e)
         {
 
         }
