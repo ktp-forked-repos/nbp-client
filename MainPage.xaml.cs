@@ -56,7 +56,7 @@ namespace NBPClient
             var res = await  WebServiceConsumer.GetCurrency("http://api.nbp.pl/api/exchangerates/tables/a/" + s, onDataComplete);
             if (res.Count == 0)
             {
-                dateErrorTextBlock.Text = "No data for this date " + data.ToString("yyyy-MM-dd") + "choose diffrent date";
+                //dateErrorTextBlock.Text = "No data for this date " + data.ToString("yyyy-MM-dd") + "choose diffrent date";
             }
             else
             {
@@ -80,7 +80,8 @@ namespace NBPClient
         private void CalendarDatePicker_DateChanged(CalendarDatePicker sender, CalendarDatePickerDateChangedEventArgs args)
         {
 
-            if (sender.Date.Value.Date > new DateTime(2002,1, 1) && sender.Date.Value.Date <= DateTime.Now)
+            if ((sender.Date.Value.Date > new DateTime(2002,1, 1) && sender.Date.Value.Date <= DateTime.Now)
+                && (sender.Date.Value.DayOfWeek != DayOfWeek.Saturday && sender.Date.Value.DayOfWeek != DayOfWeek.Sunday))
             {
                 dateErrorTextBlock.Text = "";
                 this.GetCurrencies(sender.Date.Value.Date);
@@ -101,7 +102,7 @@ namespace NBPClient
         private void CurrencySelectedItemClick(object sender, ItemClickEventArgs e)
         {
             var currencyModel = (CurrencyModel)e.ClickedItem;
-           // ListViewItem item = (ListViewItem)sender;
+            // ListViewItem item = (ListViewItem)sender;
             this.Frame.Navigate(typeof(DetailsPage), new DetailPageParametersModel()
             {
                 Table = "a",

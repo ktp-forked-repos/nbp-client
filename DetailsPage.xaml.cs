@@ -417,7 +417,7 @@ namespace NBPClient
                 }
                 else
                 {
-                    // OutputTextBlock.Text = "Operation cancelled.";
+                   
                 }
                
             }

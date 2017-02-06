@@ -12,27 +12,71 @@
             <AppBarToggleButton Click="AppBarToggleButton_Click" Icon="Edit" Label="Repeat"/>
         </CommandBar>
     </Page.TopAppBar>
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-     
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" x:Name="MainGrid">
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState x:Name="WideState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="720" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="MainGrid.Margin" Value="24"/>
+                        <Setter Target="MainGrid.RowDefinitions[1].Height" Value="auto"/>
+                        <Setter Target="MainGrid.ColumnDefinitions[1].Width" Value="*"/>
+                        <Setter Target="FirstGrid.Margin" Value="0 0 6 0"/>
+                        <Setter Target="SecondGrid.Margin" Value="6 0 0 0"/>
+                        <Setter Target="SecondGrid.(Grid.Column)" Value="1"/>
+                        <Setter Target="SecondGrid.(Grid.Row)" Value="0"/>
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="NarrowState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="MainGrid.Margin" Value="12"/>
+                        <Setter Target="FirstGrid.Margin" Value="0 0 0 6"/>
+                        <Setter Target="SecondGrid.Margin" Value="0 6 0 0"/>
+                        <Setter Target="MainGrid.RowDefinitions[1].Height" Value="*"/>
+                        <Setter Target="MainGrid.ColumnDefinitions[1].Width" Value="auto"/>
+                        <Setter Target="SecondGrid.(Grid.Column)" Value="0"/>
+                        <Setter Target="SecondGrid.(Grid.Row)" Value="1"/>
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
 
-        <ListView ItemClick="CurrencySelectedItemClick" IsItemClickEnabled="True"  ItemsSource="{x:Bind ViewModel.Currencies}"
-    HorizontalAlignment="Center" VerticalAlignment="Center">
-            <ListView.ItemTemplate>
-                <DataTemplate  x:DataType="local2:CurrencyModel">
-                    <StackPanel    Orientation="Horizontal" Margin="6">
-                        <SymbolIcon  Symbol="Page2" Margin="0,0,12,0"/>
-                        <StackPanel >
-                            <TextBlock Text="{x:Bind Currency}" FontWeight="Bold"/>
-                            <TextBlock Text="{x:Bind Mid}"/>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+
+        <Grid  x:Name="SecondGrid" Grid.Column="1" Grid.Row="0" Background="#0078d7" >
+            <ListView ItemClick="CurrencySelectedItemClick" IsItemClickEnabled="True"  ItemsSource="{x:Bind ViewModel.Currencies}"
+                  HorizontalAlignment="Center" VerticalAlignment="Center">
+                <ListView.ItemTemplate>
+                    <DataTemplate  x:DataType="local2:CurrencyModel">
+                        <StackPanel    Orientation="Horizontal" Margin="6">
+                            <SymbolIcon  Symbol="Page2" Margin="0,0,12,0"/>
+                            <StackPanel >
+                                <TextBlock Text="{x:Bind Currency}" FontWeight="Bold"/>
+                                <TextBlock Text="{x:Bind Mid}"/>
+                            </StackPanel>
                         </StackPanel>
-                    </StackPanel>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
-        <Button x:Name="button" Content="Button" HorizontalAlignment="Left" Margin="478,138,0,0" VerticalAlignment="Top" Click="button_Click"/>
-        <StackPanel Orientation="Vertical">
-            <CalendarDatePicker  Date="{x:Bind ViewModel.Date, Mode=Twoway}" DateChanged="CalendarDatePicker_DateChanged" ></CalendarDatePicker>
-        <TextBlock x:Name="dateErrorTextBlock" />
-</StackPanel>
-    </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView> 
+        </Grid>
+        <Grid x:Name="FirstGrid" Grid.Column="0" Grid.Row="0" Background="#107C10" >
+            <StackPanel Orientation="Vertical" >
+                <CalendarDatePicker  Date="{x:Bind ViewModel.Date, Mode=Twoway}" DateChanged="CalendarDatePicker_DateChanged" ></CalendarDatePicker>
+                <TextBlock x:Name="dateErrorTextBlock" />
+            </StackPanel>
+            </Grid>
+
+        </Grid>
 </Page>
