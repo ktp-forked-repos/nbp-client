@@ -28,14 +28,23 @@ namespace NBPClient
     /// </summary>
     public sealed partial class MainPage : Page
     {
+        AppSettings appSettings;
         public MainPage()
         {
             this.InitializeComponent();
             this.ViewModel = new Page1ViewModel();
             this.GetCurrencies(DateTime.Now);
-           
-       
 
+            appSettings = (App.Current as App).appSettings;
+            SetInitialData();
+
+        }
+        public void SetInitialData()
+        {
+            if(appSettings != null && appSettings.DateOnFirstPage != null)
+            {
+                this.ViewModel.SetDate(appSettings.DateOnFirstPage);
+            }
         }
         public Page1ViewModel ViewModel { get; set; }
         private async void GetCurrencies(DateTime data)
@@ -75,6 +84,7 @@ namespace NBPClient
             {
                 dateErrorTextBlock.Text = "";
                 this.GetCurrencies(sender.Date.Value.Date);
+                this.appSettings.DateOnFirstPage = sender.Date.Value.Date;
             }
             else
             {
@@ -90,7 +100,13 @@ namespace NBPClient
 
         private void CurrencySelectedItemClick(object sender, ItemClickEventArgs e)
         {
-            this.Frame.Navigate(typeof(DetailsPage));
+            var currencyModel = (CurrencyModel)e.ClickedItem;
+           // ListViewItem item = (ListViewItem)sender;
+            this.Frame.Navigate(typeof(DetailsPage), new DetailPageParametersModel()
+            {
+                Table = "a",
+                CurrencyCode = currencyModel.Code
+            });
         }
 
         private void button_Click(object sender, RoutedEventArgs e)
@@ -111,10 +127,16 @@ namespace NBPClient
     public class Page1ViewModel
     {
         private ObservableCollection<CurrencyModel> currencies = new ObservableCollection<CurrencyModel>();
+        public DateTime CurrenciesDate { get; set; }
+        public System.Nullable<DateTimeOffset> Date { get;  set; } 
         public ObservableCollection<CurrencyModel> Currencies { get { return this.currencies; } }
         public Page1ViewModel()
         {
-            
+        }
+
+        public void SetDate(DateTime _date)
+        {
+            Date = new DateTime(_date.Year,_date.Month, _date.Day);
         }
     }
     public  class WebServiceConsumer{

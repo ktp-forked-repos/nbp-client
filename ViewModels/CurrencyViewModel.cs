@@ -23,6 +23,7 @@ namespace NBPClient.ViewModels
     {
         public string No { get; set; }
         public string TableName { get; set; }
+        public string Mid { get; set; }
 
         public double Bid { get; set; }
         public double Ask { get; set; }

@@ -1,12 +1,17 @@
-﻿using System;
+﻿using NBPClient.Parameters;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Runtime.Serialization;
+using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Storage;
+using Windows.Storage.Streams;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -26,6 +31,9 @@ namespace NBPClient
         /// Initializes the singleton application object.  This is the first line of authored code
         /// executed, and as such is the logical equivalent of main() or WinMain().
         /// </summary>
+        ///
+        public AppSettings AAA;
+        public AppSettings appSettings;
         public App()
         {
             this.InitializeComponent();
@@ -37,7 +45,7 @@ namespace NBPClient
         /// will be used such as when the application is launched to open a specific file.
         /// </summary>
         /// <param name="e">Details about the launch request and process.</param>
-        protected override void OnLaunched(LaunchActivatedEventArgs e)
+        protected override async void OnLaunched(LaunchActivatedEventArgs e)
         {
 #if DEBUG
             if (System.Diagnostics.Debugger.IsAttached)
@@ -55,10 +63,10 @@ namespace NBPClient
                 rootFrame = new Frame();
 
                 rootFrame.NavigationFailed += OnNavigationFailed;
-
+                await ReadStateAsync();
                 if (e.PreviousExecutionState == ApplicationExecutionState.Terminated)
                 {
-                    //TODO: Load state from previously suspended application
+                 
                 }
 
                 // Place the frame in the current Window
@@ -72,11 +80,27 @@ namespace NBPClient
                     // When the navigation stack isn't restored navigate to the first page,
                     // configuring the new page by passing required information as a navigation
                     // parameter
-                    rootFrame.Navigate(typeof(MainPage), e.Arguments);
+                    if (appSettings != null)
+                    {
+                        if (appSettings.LastOpenPage == "DetailsPage")
+                        {
+                            rootFrame.Navigate(typeof(DetailsPage), e.Arguments);
+                        }
+                        else
+                        {
+                            rootFrame.Navigate(typeof(MainPage), e.Arguments);
+                        }
+                    }
+                    else
+                    {
+                        appSettings = new AppSettings();
+                        rootFrame.Navigate(typeof(MainPage), e.Arguments);
+                    }
                 }
                 // Ensure the current window is active
                 Window.Current.Activate();
             }
+
         }
 
         /// <summary>
@@ -96,11 +120,42 @@ namespace NBPClient
         /// </summary>
         /// <param name="sender">The source of the suspend request.</param>
         /// <param name="e">Details about the suspend request.</param>
-        private void OnSuspending(object sender, SuspendingEventArgs e)
+        private async void OnSuspending(object sender, SuspendingEventArgs e)
         {
             var deferral = e.SuspendingOperation.GetDeferral();
+           
             //TODO: Save application state and stop any background activity
+            await SaveStateAsync();
             deferral.Complete();
+        }
+
+        public async Task ReadStateAsync()
+        {
+            var file = await ApplicationData.Current.LocalFolder.GetFileAsync("appsettings.xml");
+            if (file == null) return;
+
+            using (IInputStream stream = await file.OpenSequentialReadAsync())
+            {
+                var serializer = new DataContractSerializer(typeof(AppSettings));
+                appSettings = (AppSettings)serializer.ReadObject(stream.AsStreamForRead());
+            }
+        }
+
+        private async Task SaveStateAsync()
+        {
+            var ms = new MemoryStream();
+            var serializer = new DataContractSerializer(typeof(AppSettings));
+            serializer.WriteObject(ms, appSettings);
+
+            var file = await ApplicationData.Current.LocalFolder.CreateFileAsync("appsettings.xml", CreationCollisionOption.ReplaceExisting);
+
+            using (var fs = await file.OpenStreamForWriteAsync())
+            {
+                //because we have written to the stream, set the position back to start
+                ms.Seek(0, SeekOrigin.Begin);
+                await ms.CopyToAsync(fs);
+                await fs.FlushAsync();
+            }
         }
     }
 }

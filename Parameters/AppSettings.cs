@@ -6,7 +6,13 @@ using System.Threading.Tasks;
 
 namespace NBPClient.Parameters
 {
-    class AppSettings
+   public class AppSettings
     {
+        public DateTime DateOnFirstPage { get; set; }
+        public DateTime StartDateOnSecondPage { get; set; }
+        public string CurrencyCode { get; set; }
+        public string LastOpenPage { get; set; }
+        public DateTime EndDateOnSecondPage { get; set; }
+
     }
 }

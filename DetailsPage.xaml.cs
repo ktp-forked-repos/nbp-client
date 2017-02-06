@@ -15,8 +15,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Graphics.Display;
 using Windows.Graphics.Imaging;
+using Windows.Storage;
+using Windows.Storage.Pickers;
+using Windows.Storage.Provider;
 using Windows.UI.Composition;
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -40,6 +45,8 @@ namespace NBPClient
         public  DetailsPageViewModel ViewModel;
         public DetailPageParametersModel parameters;
         CancellationTokenSource cts;
+        AppSettings appSetttings;
+        
         public DetailsPage()
         {
            
@@ -47,19 +54,34 @@ namespace NBPClient
             this.ViewModel = new DetailsPageViewModel();
             //  this.DataContext = new DetailsPageViewModel();
             this.Loaded += DetailsPage_Loaded;
+            appSetttings = (App.Current as App).appSettings;
+            SetInitialData();
 
-
+        }
+        public void SetInitialData()
+        {
+            if(this.appSetttings!= null)
+            {
+               
+            }
+           
+        }
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            parameters = (DetailPageParametersModel)e.Parameter;
+            base.OnNavigatedTo(e);
         }
         protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
         {
-            base.OnNavigatingFrom(e);
+         
             parameters = (DetailPageParametersModel)e.Parameter;
+            base.OnNavigatingFrom(e);
 
         }
         private async void DetailsPage_Loaded(object sender, RoutedEventArgs e)
         {
             LoadChartContents();
-         
+         //   parameters = (DetailPageParametersModel)e.Parameter;
             //cts = new CancellationTokenSource();
 
             //try
@@ -117,10 +139,24 @@ namespace NBPClient
             this.Frame.Navigate(typeof(DetailsPage));
         }
 
-        private void StartDateChanged(CalendarDatePicker sender, CalendarDatePickerDateChangedEventArgs args)
+        private async void StartDateChanged(CalendarDatePicker sender, CalendarDatePickerDateChangedEventArgs args)
         {
             this.ViewModel.StartDate = sender.Date.Value.Date;
-          //  this.GetCurrencySet();
+            cts = new CancellationTokenSource();
+
+            try
+            {
+                if(this.ViewModel.StartDate != null && this.ViewModel.EndDate !=  null)
+                    await AccessTheWebAsync(cts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception ex)
+            {
+            }
+
+            cts = null;
         }
 
         private  async void EndDateChanged(CalendarDatePicker sender, CalendarDatePickerDateChangedEventArgs args)
@@ -130,12 +166,12 @@ namespace NBPClient
 
             try
             {
-                await AccessTheWebAsync(cts.Token, det);
+                await AccessTheWebAsync(cts.Token);
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException )
             {
             }
-            catch (Exception)
+            catch (Exception ex )
             {
             }
 
@@ -234,14 +270,16 @@ namespace NBPClient
                 {
                     this.ViewModel.ProgressBardProgess = 100;
                 }
-                // Await the completed task.  
-               
-                //foreach(var item in res2) {
-                //     ViewModel.CurrenciesAdd(item);
+            
 
-                // await Task.Delay(TimeSpan.FromMilliseconds(10));
 
-                // }
+                //foreach (var item in res2)
+                //{
+                //    ViewModel.Currencies.Add(item);
+
+                //    await Task.Delay(TimeSpan.FromMilliseconds(10));
+
+                //}
 
 
             }
@@ -313,10 +351,16 @@ namespace NBPClient
 
         private void AppBarToggleButton_Click_1(object sender, RoutedEventArgs e)
         {
-            Frame rootFrame = Window.Current.Content as Frame;
-            if (rootFrame.CanGoBack)
+            try
             {
-                rootFrame.GoBack();
+                Frame rootFrame = Window.Current.Content as Frame;
+                if (rootFrame.CanGoBack)
+                {
+                    this.Frame.Navigate(typeof(MainPage));
+                }
+            }catch(Exception ex)
+            {
+                var a = ex;
             }
         }
 
@@ -325,7 +369,83 @@ namespace NBPClient
 
         }
 
-        private void AppBarToggleButton_Click_3(object sender, RoutedEventArgs e)
+        private  async void AppBarToggleButton_Click_3(object sender, RoutedEventArgs e)
+        {
+
+            RenderTargetBitmap bitmap2 = new RenderTargetBitmap();
+             await bitmap2.RenderAsync(LineChartStackPanel, (int)LineChartStackPanel.ActualWidth, (int)LineChartStackPanel.ActualHeight);
+            var res = await bitmap2.GetPixelsAsync();
+           
+            try
+            {
+                if (EnsureUnsnapped())
+            {
+               
+                FileSavePicker savePicker = new FileSavePicker();
+                    savePicker.DefaultFileExtension = ".png";
+                    savePicker.FileTypeChoices.Add(".png", new List<string> { ".png" });
+                    savePicker.SuggestedStartLocation = PickerLocationId.PicturesLibrary;
+                    savePicker.SuggestedFileName = "snapshot.png";
+
+                    StorageFile file = await savePicker.PickSaveFileAsync();
+                    if (file == null)
+                    {
+                        return;
+                      
+                    }
+                    using (var fileStream = await file.OpenAsync(FileAccessMode.ReadWrite))
+                    {
+                        var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, fileStream);
+
+                        encoder.SetPixelData(
+                            BitmapPixelFormat.Rgba8,
+                            BitmapAlphaMode.Premultiplied,
+                            (uint)bitmap2.PixelWidth,
+                            (uint)bitmap2.PixelHeight,
+                            DisplayInformation.GetForCurrentView().LogicalDpi,
+                            DisplayInformation.GetForCurrentView().LogicalDpi,
+                            res.ToArray());
+
+                        await encoder.FlushAsync();
+                        using (var outputStream = fileStream.GetOutputStreamAt(0))
+                        {
+                            await outputStream.FlushAsync();
+                            
+                        }
+                    }
+
+                }
+                else
+                {
+                    // OutputTextBlock.Text = "Operation cancelled.";
+                }
+               
+            }
+            catch (Exception ex)
+            {
+
+                var a = ex;
+                var b = 10;
+            }
+
+
+        }
+
+        public bool EnsureUnsnapped()
+        {
+            // FilePicker APIs will not work if the application is in a snapped state.
+            // If an app wants to show a FilePicker while snapped, it must attempt to unsnap first
+            bool unsnapped = ((ApplicationView.Value != ApplicationViewState.Snapped) || ApplicationView.TryUnsnap());
+            if (!unsnapped)
+            {
+             //   NotifyUser("Cannot unsnap the sample.", NotifyType.StatusMessage);
+            }
+
+            return unsnapped;
+        }
+
+
+        private void AppBarToggleButton_Checked(object sender, RoutedEventArgs e)
         {
 
         }
