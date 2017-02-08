@@ -21,7 +21,7 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
-
+using NBPClient.Core.Infrastructure;
 namespace NBPClient
 {
     /// <summary>
@@ -29,7 +29,7 @@ namespace NBPClient
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        private AppSettings appSettings;
+        private AppSettings AppSettings { get; set; }
         public MainPageViewModel ViewModel { get; set; }
         public MainPage()
         {
@@ -47,57 +47,58 @@ namespace NBPClient
 
         public void ReadAppSettings()
         {
-            appSettings = (App.Current as App).appSettings;
+            AppSettings = (App.Current as App).appSettings;
         }
 
         public void SetInitialData()
         {
-            if(appSettings != null && appSettings.DateOnFirstPage != null)
+            if(AppSettings.HasDateOnFirstPage())
             {
-                this.ViewModel.SetDate(appSettings.DateOnFirstPage);
+                this.ViewModel.SetDate(AppSettings.DateOnFirstPage);
+            }else
+            {
+                this.ViewModel.SetDate(DateTime.Now);
             }
         }
        
         private async void GetCurrencies()
         {
+            CurrencieProgresRing.IsActive = true;
             this.ViewModel.Currencies.Clear();
-            DateTime date = DateTime.Now;
-            if (appSettings.DateOnFirstPage != null)
-                date = appSettings.DateOnFirstPage;
-            string s = date.ToString("yyyy-MM-dd");
-            var res = await  WebServiceConsumer.GetCurrency("http://api.nbp.pl/api/exchangerates/tables/a/" + s, onDataComplete);
-            if (res.Count == 0)
+            var res = WebServiceConsumer.GetCurrency(GetApiAddress(), ()=> { });
+            await res.ContinueWith((t) =>
             {
-                dateErrorTextBlock.Text = "No data for this date " + date.ToString("yyyy-MM-dd") + "choose diffrent date";
-            }
-            else
-            {
-                foreach (var item in res)
-                {
-                    this.ViewModel.Currencies.Add(item);
-                }
-            }
-
+                this.HandleResults(res.Result);
+                this.OnDataComplete();
+            }, TaskScheduler.FromCurrentSynchronizationContext());
         }
-        public void onDataComplete()
+
+        private void HandleResults(List<CurrencyModel> result)
         {
-            //currencieProgresRing.IsActive = false;
+            result
+             .WhenSome(() => result.ForEach(item => this.ViewModel.Currencies.Add(item)))
+             .WhenNone(() => this.ViewModel.SetWrongDateAlert());
+        }
+        
+        public void OnDataComplete()
+        {
+            this.CurrencieProgresRing.IsActive = false;
         }
 
 
         private void CalendarDatePicker_DateChanged(CalendarDatePicker sender, CalendarDatePickerDateChangedEventArgs args)
         {
 
-            if ((sender.Date.Value.Date > new DateTime(2002,1, 1) && sender.Date.Value.Date <= DateTime.Now)
-                && (sender.Date.Value.DayOfWeek != DayOfWeek.Saturday && sender.Date.Value.DayOfWeek != DayOfWeek.Sunday))
+            if (this.IsSelectedDataValid(sender.Date.Value.Date))
             {
-                dateErrorTextBlock.Text = "";
-                this.GetCurrencies(sender.Date.Value.Date);
-                this.appSettings.DateOnFirstPage = sender.Date.Value.Date;
+                this.ViewModel.ResetWrongDataAlert();
+                this.ViewModel.SetDate(sender.Date.Value.Date);
+                this.GetCurrencies();
+                this.AppSettings.SetDateOnFirstPage(sender.Date.Value.Date);
             }
             else
             {
-                dateErrorTextBlock.Text = "Wrong date! Choose date starting from 23 Sep 2002";
+                this.ViewModel.SetWrongDateAlert();
 
             }
         }
@@ -117,9 +118,22 @@ namespace NBPClient
         {
             Application.Current.Exit();
         }
+
         private void CurrencyListViewItemClick(object sender, ItemClickEventArgs e)
         {
             this.Frame.Navigate(typeof(DetailsPage));
         }
+
+        private string GetApiAddress()
+        {
+            return Core.Constants.Constants.MainPageCurrenciesAdress + this.ViewModel.CurrentDate.ToString("yyyy-MM-dd");
+        }
+
+        public bool IsSelectedDataValid(DateTime date )
+        {
+            return (date > new DateTime(2002, 1, 1) && date <= DateTime.Now)
+                && (date.DayOfWeek != DayOfWeek.Saturday && date.DayOfWeek != DayOfWeek.Sunday);
+        }
     }
+  
 }

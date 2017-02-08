@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 
 namespace NBPClient.Core.Constants
 {
-    class Constants
+    public static class Constants
     {
+        public static string MainPageTable = "a";
+        public static string MainPageCurrenciesAdress = "http://api.nbp.pl/api/exchangerates/tables/a/";
     }
 }

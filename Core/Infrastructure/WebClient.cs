@@ -1,12 +1,38 @@
-﻿using System;
+﻿using NBPClient.ViewModels;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace NBPClient.Infrastructure
 {
-    class WebClient
+    public class WebServiceConsumer
     {
+        static HttpClient client = new HttpClient();
+        CancellationTokenSource cts;
+        public static async Task<List<CurrencyModel>> GetCurrency(string path, Action onComplete)
+        {
+           
+            HttpResponseMessage response = await client.GetAsync(path);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return new List<CurrencyModel>();
+            }
+            else
+            {
+                string prod = await response.Content.ReadAsStringAsync();
+                onComplete();
+                var json = JArray.Parse(prod)[0].ToString();
+                var list = JsonConvert.DeserializeObject<TableModel>(json);
+                return list.Rates;
+            }
+        }
+
     }
 }

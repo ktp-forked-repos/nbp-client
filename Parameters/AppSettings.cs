@@ -10,9 +10,18 @@ namespace NBPClient.Parameters
     {
         public DateTime DateOnFirstPage { get; set; }
         public DateTime StartDateOnSecondPage { get; set; }
+        public DateTime EndDateOnSecondPage { get; set; }
         public string CurrencyCode { get; set; }
         public string LastOpenPage { get; set; }
-        public DateTime EndDateOnSecondPage { get; set; }
 
+        public  bool HasDateOnFirstPage()
+        {
+            return this.DateOnFirstPage != null;
+        }
+
+        public  void SetDateOnFirstPage(DateTime date)
+        {
+            this.DateOnFirstPage = date;
+        }
     }
 }

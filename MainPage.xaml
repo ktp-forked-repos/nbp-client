@@ -56,6 +56,7 @@
         </Grid.RowDefinitions>
 
         <Grid  x:Name="SecondGrid" Grid.Column="1" Grid.Row="0" Background="#0078d7" >
+            <ProgressRing IsActive="True" Height="100" Width="100" x:Name="CurrencieProgresRing"/>
             <ListView ItemClick="CurrencySelectedItemClick" IsItemClickEnabled="True"  ItemsSource="{x:Bind ViewModel.Currencies}"
                   HorizontalAlignment="Center" VerticalAlignment="Center">
                 <ListView.ItemTemplate>
@@ -74,7 +75,7 @@
         <Grid x:Name="FirstGrid" Grid.Column="0" Grid.Row="0" Background="#107C10" >
             <StackPanel Orientation="Vertical" >
                 <CalendarDatePicker  Date="{x:Bind ViewModel.Date, Mode=Twoway}" DateChanged="CalendarDatePicker_DateChanged" ></CalendarDatePicker>
-                <TextBlock x:Name="dateErrorTextBlock" />
+                <TextBlock x:Name="dateErrorTextBlock" Text="{x:Bind  ViewModel.WrongDateAlert, Mode=OneWay}" />
             </StackPanel>
             </Grid>
 
