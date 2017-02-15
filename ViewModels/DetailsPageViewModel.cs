@@ -45,6 +45,8 @@ namespace NBPClient.ViewModels
         {
             ProgressBardProgess = 0D;
             StartDate = DateTime.Now;
+            ProgressBarVisibility = Visibility.Collapsed;
+            IsProgressBarActive = false;
             EndDate = DateTime.Now;
             ChartAxis = new LinearAxis()
             {
@@ -79,18 +81,7 @@ namespace NBPClient.ViewModels
                 OnPropertyChanged(); } }
         public LinearAxis ChartAxis { get; set; }
         public string errorText { get; set; }
-        public bool ProgressBarActive { get; set; }
-
        
-
-        public void ResetProgres()
-        {
-            this.ProgressBardProgess = 0;
-            this.ProgressBarActive = false;
-            this.ProgressBarVisibility = Visibility.Visible;
-        }
-
-        
 
         public string ErrorText
         {
@@ -115,11 +106,35 @@ namespace NBPClient.ViewModels
         private double _ProgressBardProgess;
         public event PropertyChangedEventHandler PropertyChanged = delegate { };
         private int ProgressInterval { get; set; }
-        public Visibility ProgressBarVisibility { get; private set; }
         public string CurrencyCode { get; internal set; }
         public string Table { get; internal set; }
         public System.Nullable<DateTimeOffset>  StartDateOff { get;  set; }
         public System.Nullable<DateTimeOffset>  EndDateOff { get;  set; }
+        private bool isProgressBarActive;
+        private Visibility progressBarVisibility;
+        public bool IsProgressBarActive {
+            get
+            {
+                return isProgressBarActive;
+            }
+            set
+            {
+                isProgressBarActive = value;
+                OnPropertyChanged();
+            }
+        }
+        public Visibility ProgressBarVisibility
+        {
+            get
+            {
+                return progressBarVisibility;
+            }
+            set
+            {
+                progressBarVisibility = value;
+                OnPropertyChanged();
+            }
+        }
 
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
@@ -176,14 +191,21 @@ namespace NBPClient.ViewModels
 
         public void HideProgress()
         {
-            this.ProgressBarActive = false;
-            this.ProgressBarVisibility = Visibility.Collapsed; 
+            this.ProgressBarVisibility = Visibility.Collapsed;
+            this.IsProgressBarActive = false;
           
         }
 
-        public void SetErrorText(string v)
+        public void SetErrorText(string error)
         {
-            this.errorText = v;
+            this.errorText = error;
+        }
+
+        public void ShowProgressBars()
+        {
+            this.IsProgressBarActive = true;
+            this.ProgressBardProgess = 0;
+            this.ProgressBarVisibility = Visibility.Visible;
         }
     }
 }

@@ -28,13 +28,13 @@
             Foreground="#FF8B64C3"
                      Minimum="0"
             Value="{x:Bind ViewModel.ProgressBardProgess, Mode=OneWay }" 
-             Visibility="Collapsed" 
+             Visibility="{x:Bind  ViewModel.ProgressBarVisibility, Mode=OneWay}"  
             Maximum="100" 
             BorderBrush="#FF411F72" 
             BorderThickness="1"/>
             <TextBlock x:Name="WrongDateTextBox" Width="200" Visibility="Visible"  Text="{x:Bind  ViewModel.ErrorText, Mode=TwoWay}" />
-            <TextBlock x:Name="ProgressTextBox" Width="200" Visibility="Collapsed" Text="{x:Bind ViewModel.ProgressBardProgess, Mode=OneWay}" />
-            <ProgressRing IsActive="{x:Bind ViewModel.ProgressBarActive, Mode=OneWay}" Visibility="Collapsed" Height="50" Width="50" x:Name="RatesProgresRing"/>
+            <TextBlock x:Name="ProgressTextBox" Width="200"  Visibility="{x:Bind  ViewModel.ProgressBarVisibility, Mode=OneWay}"  Text="{x:Bind ViewModel.ProgressBardProgess, Mode=OneWay}" />
+            <ProgressRing IsActive="{x:Bind ViewModel.IsProgressBarActive, Mode=OneWay}"  Visibility="{x:Bind  ViewModel.ProgressBarVisibility, Mode=OneWay}" Height="50" Width="50" x:Name="RatesProgresRing"/>
             <Charting:Chart x:Name="LineChart" HorizontalAlignment="Center" VerticalAlignment="Top" Width="800" Height="400">
                 <Charting:LineSeries Title="Currecy" Margin="0" ItemsSource="{x:Bind ViewModel.Currencies }"   IndependentValuePath="EffectiveDate" 
                                      DependentValuePath="Mid" IsSelectionEnabled="False" >

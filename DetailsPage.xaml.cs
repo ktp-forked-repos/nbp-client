@@ -113,7 +113,6 @@ namespace NBPClient
         private async void DetailsPage_Loaded(object sender, RoutedEventArgs e)
         {
             LoadChartContents();
-            // ReadAppSettings();
             if (parameters == null)
             {
                 await SetInitialDate();
@@ -130,18 +129,14 @@ namespace NBPClient
             ((LineSeries)LineChart.Series[0]).DependentRangeAxis = this.ViewModel.ChartAxis;
         }
 
-        private void button_Click_1(object sender, RoutedEventArgs e)
-        {
-            this.Frame.Navigate(typeof(MainPage));
-        }
-
         private async void StartDateChanged(CalendarDatePicker sender, CalendarDatePickerDateChangedEventArgs args)
         {
             this.ViewModel.StartDate = sender.Date.Value.Date;
-            AppSetttings.SetStartDateOnSecondPage(sender.Date.Value.Date);
             this.ViewModel.ResetErrorText();
+            AppSetttings.SetStartDateOnSecondPage(sender.Date.Value.Date);
             await Do();
         }
+
         public async Task Do()
         {
             cts = new CancellationTokenSource();
@@ -162,37 +157,31 @@ namespace NBPClient
 
         async Task AccessTheWebAsync(CancellationToken ct)
         {
-            RatesProgresRing.IsActive = true;
+           
             HttpClient client = new HttpClient();
-            List<string> urlList = UrlBuilder.SetUpURLList(Convert.ToInt32((this.ViewModel.EndDate - this.ViewModel.StartDate).TotalDays),ViewModel.Table,  ViewModel.CurrencyCode, this.ViewModel.StartDate);
+            List<string> urlList = UrlBuilder.SetUpURLList(Convert.ToInt32((this.ViewModel.EndDate - this.ViewModel.StartDate).TotalDays),ViewModel.Table,  ViewModel.CurrencyCode, ViewModel.StartDate);
           
             List<Task<List<RateMode>>> downloadTasks = (from url in urlList select ProcessURL(url, client, ct)).ToList();
-            this.ViewModel.ResetProgres();
-            RatesProgresRing.Visibility = Visibility.Visible;
-            ProgressTextBox.Visibility = Visibility.Visible;
+            this.ViewModel.ShowProgressBars();
             this.ViewModel.SetProgressInterval(Convert.ToInt32(Math.Ceiling(100D / downloadTasks.Count())));
             while (downloadTasks.Count > 0)
             {
                 Task<List<RateMode>> firstFinishedTask = await Task.WhenAny(downloadTasks);
-
                 downloadTasks.Remove(firstFinishedTask);
                 await firstFinishedTask.ContinueWith((t) =>
                 {
                     this.ViewModel.CurrenciesSet(t.Result);
-                  
                     this.ViewModel.UpdateProgress();
                 
                 },TaskScheduler.FromCurrentSynchronizationContext());
             }
-            RatesProgresRing.Visibility = Visibility.Collapsed;
-            ProgressTextBox.Visibility = Visibility.Collapsed;
+            this.ViewModel.HideProgress();
         }
 
         async Task<List<RateMode>> ProcessURL(string url, HttpClient client, CancellationToken ct)
         {
             HttpResponseMessage response = await client.GetAsync(url, ct).ConfigureAwait(false);
             string a = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-           
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
                 var json = JObject.Parse(a).ToString();
@@ -220,7 +209,6 @@ namespace NBPClient
                 }
             }catch(Exception ex)
             {
-                var a = ex;
             }
         }
 
