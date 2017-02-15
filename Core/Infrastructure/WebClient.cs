@@ -17,21 +17,28 @@ namespace NBPClient.Infrastructure
         CancellationTokenSource cts;
         public static async Task<List<CurrencyModel>> GetCurrency(string path, Action onComplete)
         {
-           
-            HttpResponseMessage response = await client.GetAsync(path);
+            //try
+            //{
+                HttpResponseMessage response = await client.GetAsync(path);
 
-            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-            {
-                return new List<CurrencyModel>();
-            }
-            else
-            {
-                string prod = await response.Content.ReadAsStringAsync();
-                onComplete();
-                var json = JArray.Parse(prod)[0].ToString();
-                var list = JsonConvert.DeserializeObject<TableModel>(json);
-                return list.Rates;
-            }
+                if (response.StatusCode != System.Net.HttpStatusCode.OK)
+                {
+                    return new List<CurrencyModel>();
+                }
+                else
+                {
+                    string prod = await response.Content.ReadAsStringAsync();
+                    onComplete();
+                    var json = JArray.Parse(prod)[0].ToString();
+                    var list = JsonConvert.DeserializeObject<TableModel>(json);
+                    return list.Rates;
+                }
+            //}catch(Exception ex)
+            //{
+            //    var expection = ex;
+            //    return new List<CurrencyModel>();
+            //}
+           
         }
         public static async Task<List<RateMode>> GetRates(string path)
         {

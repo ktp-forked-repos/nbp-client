@@ -33,11 +33,17 @@ namespace NBPClient
         public MainPageViewModel ViewModel { get; set; }
         public MainPage()
         {
-            this.InitializeComponent();
-            this.InitViewModel();
-            this.ReadAppSettings();
-            this.SetInitialData();
-            this.GetCurrencies();
+            try
+            {
+                this.InitializeComponent();
+                this.InitViewModel();
+                this.ReadAppSettings();
+                this.SetInitialData();
+                this.GetCurrencies();
+            }catch(Exception ex)
+            {
+                this.ViewModel.SetErrorAlert();
+            }
         }
 
         public void InitViewModel()
@@ -64,14 +70,25 @@ namespace NBPClient
        
         private async void GetCurrencies()
         {
-            CurrencieProgresRing.IsActive = true;
-            this.ViewModel.Currencies.Clear();
-            var res = WebServiceConsumer.GetCurrency(GetApiAddress(), ()=> { });
-            await res.ContinueWith((t) =>
+            try
             {
-                this.HandleResults(res.Result);
-                this.OnDataComplete();
-            }, TaskScheduler.FromCurrentSynchronizationContext());
+                CurrencieProgresRing.IsActive = true;
+                this.ViewModel.Currencies.Clear();
+                var res = WebServiceConsumer.GetCurrency(GetApiAddress(), () => { });
+                await res.ContinueWith((t) =>
+                {
+                    this.HandleResults(res.Result);
+                    this.OnDataComplete();
+                }, TaskScheduler.FromCurrentSynchronizationContext());
+            }
+            catch(AggregateException aggregateEx)
+            {
+                this.ViewModel.SetErrorAlert();
+            }
+            catch(Exception ex)
+            {
+                this.ViewModel.SetErrorAlert();
+            }
         }
 
         private void HandleResults(List<CurrencyModel> result)
@@ -92,6 +109,7 @@ namespace NBPClient
 
             if (DateValidator.CheckDate(sender.Date.Value.Date, () => this.ViewModel.SetWrongDateAlert()))
             {
+                
                 this.ViewModel.ResetWrongDataAlert();
                 this.ViewModel.SetDate(sender.Date.Value.Date);
                 this.GetCurrencies();

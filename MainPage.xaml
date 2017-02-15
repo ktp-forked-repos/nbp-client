@@ -9,7 +9,7 @@
     mc:Ignorable="d">
     <Page.TopAppBar>
         <CommandBar  >
-            <AppBarToggleButton Click="AppBarToggleButton_Click" Icon="Edit" Label="Repeat"/>
+            <AppBarToggleButton Click="AppBarToggleButton_Click" Icon="Delete" Label="Close"/>
         </CommandBar>
     </Page.TopAppBar>
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" HorizontalAlignment="Left" x:Name="MainGrid">
@@ -47,7 +47,7 @@
         </VisualStateManager.VisualStateGroups>-->
 
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
+            <ColumnDefinition  MinWidth="500" Width="*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
@@ -72,9 +72,9 @@
             </ListView> 
         </Grid>
         <Grid x:Name="FirstGrid" Grid.Column="0" Grid.Row="0" Background="#107C10"  HorizontalAlignment="Center"   >
-            <StackPanel Orientation="Vertical"  HorizontalAlignment="Center" Margin="10 10 10 10" >
-                <CalendarDatePicker  Date="{x:Bind ViewModel.Date, Mode=Twoway}" DateChanged="CalendarDatePicker_DateChanged" ></CalendarDatePicker>
-                <TextBlock x:Name="dateErrorTextBlock" Text="{x:Bind  ViewModel.WrongDateAlert, Mode=OneWay}" />
+            <StackPanel Orientation="Horizontal"  HorizontalAlignment="Center" Margin="10 10 10 10" >
+                <CalendarDatePicker Header="Choose date" Date="{x:Bind ViewModel.Date, Mode=Twoway}" DateChanged="CalendarDatePicker_DateChanged" ></CalendarDatePicker>
+                <TextBlock x:Name="DateErrorTextBlock" Text="{x:Bind  ViewModel.WrongDateAlert, Mode=TwoWay}" />
             </StackPanel>
             </Grid>
         </Grid>

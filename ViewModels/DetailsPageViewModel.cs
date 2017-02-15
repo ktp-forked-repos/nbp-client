@@ -44,8 +44,8 @@ namespace NBPClient.ViewModels
         public DetailsPageViewModel()
         {
             ProgressBardProgess = 0D;
-            StartDate = null;
-            EndDate = null;
+            StartDate = DateTime.Now;
+            EndDate = DateTime.Now;
             ChartAxis = new LinearAxis()
             {
                 Maximum = 3.5,
@@ -58,7 +58,7 @@ namespace NBPClient.ViewModels
         }
         private RangeObservableCollection<RateMode> currencies = new RangeObservableCollection<RateMode>();
         public RangeObservableCollection<RateMode> Currencies { get { return this.currencies; } }
-        public DateTime? StartDate
+        public DateTime StartDate
         {
             get
             {
@@ -67,13 +67,15 @@ namespace NBPClient.ViewModels
             set
             {
                 startDate = value;
+                StartDateOff = new DateTime(value.Year, value.Month, value.Day);
                 OnPropertyChanged();
             }
         }
-        private DateTime? startDate;
-        private DateTime? endDate;
-        public DateTime? EndDate { get { return endDate; }  set {
+        private DateTime startDate;
+        private DateTime endDate;
+        public DateTime EndDate { get { return endDate; }  set {
                 endDate = value;
+                EndDateOff = new DateTime(value.Year, value.Month, value.Day);
                 OnPropertyChanged(); } }
         public LinearAxis ChartAxis { get; set; }
         public string errorText { get; set; }
@@ -116,6 +118,8 @@ namespace NBPClient.ViewModels
         public Visibility ProgressBarVisibility { get; private set; }
         public string CurrencyCode { get; internal set; }
         public string Table { get; internal set; }
+        public System.Nullable<DateTimeOffset>  StartDateOff { get;  set; }
+        public System.Nullable<DateTimeOffset>  EndDateOff { get;  set; }
 
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
@@ -148,6 +152,11 @@ namespace NBPClient.ViewModels
             //OnPropertyChanged("currencies");
         }
 
+        public  void ResetErrorText()
+        {
+            this.ErrorText = "";
+        }
+
         public void SetProgressInterval(int interval)
         {
             ProgressInterval = interval;
@@ -169,6 +178,12 @@ namespace NBPClient.ViewModels
         {
             this.ProgressBarActive = false;
             this.ProgressBarVisibility = Visibility.Collapsed; 
+          
+        }
+
+        public void SetErrorText(string v)
+        {
+            this.errorText = v;
         }
     }
 }

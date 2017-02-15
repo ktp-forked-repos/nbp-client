@@ -6,17 +6,19 @@
     xmlns:local="using:NBPClient"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    MinHeight="500"
+    MinWidth="900"
     mc:Ignorable="d">
     <Page.TopAppBar>
         <CommandBar  >
-            <AppBarToggleButton Click="BackButtonClick" Icon="Back" Label="Repeat"/>
-            <AppBarToggleButton Click="CloseButtonClick" Icon="Delete" Label="Repeat"/>
+            <AppBarToggleButton Click="BackButtonClick" Icon="Back" Label="Back"/>
+            <AppBarToggleButton Click="CloseButtonClick" Icon="Delete" Label="Close"/>
         </CommandBar>
     </Page.TopAppBar>
     <StackPanel Orientation="Vertical">
-        <StackPanel Width="auto" Margin="10 10 10 10" Orientation="Horizontal" Height="auto"> 
-        <local:CustomCalendarDatePicker Margin="10 10 10 10" DateChanged="StartDateChanged"  Header="Start date"  ></local:CustomCalendarDatePicker>
-        <CalendarDatePicker DateChanged="EndDateChanged" Margin="10 10 10 10" Header="End date" RenderTransformOrigin="0,1"></CalendarDatePicker>
+        <StackPanel Width="auto" Margin="10 10 10 10" Orientation="Horizontal" Height="auto">
+            <CalendarDatePicker Margin="10 10 10 10" DateChanged="StartDateChanged"  Header="Start date"  Date="{x:Bind ViewModel.StartDateOff, Mode=Twoway}" ></CalendarDatePicker>
+        <CalendarDatePicker DateChanged="EndDateChanged" Margin="10 10 10 10" Header="End date" RenderTransformOrigin="0,1" Date="{x:Bind ViewModel.EndDateOff, Mode=Twoway}"></CalendarDatePicker>
      
         </StackPanel>
      
@@ -30,10 +32,10 @@
             Maximum="100" 
             BorderBrush="#FF411F72" 
             BorderThickness="1"/>
-            <TextBlock x:Name="WrongDateTextBox" Width="200" Visibility="Visible"  />
+            <TextBlock x:Name="WrongDateTextBox" Width="200" Visibility="Visible"  Text="{x:Bind  ViewModel.ErrorText, Mode=TwoWay}" />
             <TextBlock x:Name="ProgressTextBox" Width="200" Visibility="Collapsed" Text="{x:Bind ViewModel.ProgressBardProgess, Mode=OneWay}" />
-            <ProgressRing IsActive="{x:Bind ViewModel.ProgressBarActive, Mode=OneWay}" Height="50" Width="50" x:Name="RatesProgresRing"/>
-            <Charting:Chart x:Name="LineChart" HorizontalAlignment="Center" VerticalAlignment="Top" Width="600" Height="400">
+            <ProgressRing IsActive="{x:Bind ViewModel.ProgressBarActive, Mode=OneWay}" Visibility="Collapsed" Height="50" Width="50" x:Name="RatesProgresRing"/>
+            <Charting:Chart x:Name="LineChart" HorizontalAlignment="Center" VerticalAlignment="Top" Width="800" Height="400">
                 <Charting:LineSeries Title="Currecy" Margin="0" ItemsSource="{x:Bind ViewModel.Currencies }"   IndependentValuePath="EffectiveDate" 
                                      DependentValuePath="Mid" IsSelectionEnabled="False" >
                     <Charting:LineSeries.DataPointStyle>

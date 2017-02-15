@@ -51,10 +51,11 @@ namespace NBPClient
         
         public DetailsPage()
         {
-            this.InitializeComponent();
-            this.ViewModel = new DetailsPageViewModel();
-            this.Loaded += DetailsPage_Loaded;
-            ReadAppSettings();
+                this.InitializeComponent();
+                this.ViewModel = new DetailsPageViewModel();
+                this.Loaded += DetailsPage_Loaded;
+                ReadAppSettings();
+       
         }
         public void ReadAppSettings()
         {
@@ -126,10 +127,7 @@ namespace NBPClient
         }
         private void LoadChartContents()
         {
-           
-           // (LineChart.Series[0] as LineSeries).ItemsSource = this.ViewModel.Currencies;
             ((LineSeries)LineChart.Series[0]).DependentRangeAxis = this.ViewModel.ChartAxis;
-           
         }
 
         private void button_Click_1(object sender, RoutedEventArgs e)
@@ -141,7 +139,7 @@ namespace NBPClient
         {
             this.ViewModel.StartDate = sender.Date.Value.Date;
             AppSetttings.SetStartDateOnSecondPage(sender.Date.Value.Date);
-            this.ViewModel.ErrorText = "";
+            this.ViewModel.ResetErrorText();
             await Do();
         }
         public async Task Do()
@@ -157,32 +155,20 @@ namespace NBPClient
         private  async void EndDateChanged(CalendarDatePicker sender, CalendarDatePickerDateChangedEventArgs args)
         {
             this.ViewModel.EndDate = sender.Date.Value.Date;
-            this.ViewModel.ErrorText = "";
+            this.ViewModel.ResetErrorText();
             AppSetttings.SetEndDateOnSecondPage(sender.Date.Value.Date);
-            cts = new CancellationTokenSource();
-            if (DateValidator.CheckDateRange(ViewModel.StartDate, ViewModel.EndDate, () => this.ViewModel.ErrorText = "Wrong date"))
-            {
-                this.ViewModel.Currencies.Clear();
-                await AccessTheWebAsync(cts.Token).ContinueWith((t) =>
-                {
-                    this.ViewModel.HideProgress();
-                    RatesProgresRing.IsActive = false;
-                    dataFetchingProgressBar.Visibility = Visibility.Collapsed;
-                }, TaskScheduler.FromCurrentSynchronizationContext());
-
-            }
-            cts = null;
+            await Do();
         }
 
         async Task AccessTheWebAsync(CancellationToken ct)
         {
             RatesProgresRing.IsActive = true;
             HttpClient client = new HttpClient();
-            List<string> urlList = UrlBuilder.SetUpURLList(Convert.ToInt32((this.ViewModel.EndDate - this.ViewModel.StartDate).Value.TotalDays),ViewModel.Table,  ViewModel.CurrencyCode, this.ViewModel.StartDate.Value);
+            List<string> urlList = UrlBuilder.SetUpURLList(Convert.ToInt32((this.ViewModel.EndDate - this.ViewModel.StartDate).TotalDays),ViewModel.Table,  ViewModel.CurrencyCode, this.ViewModel.StartDate);
           
             List<Task<List<RateMode>>> downloadTasks = (from url in urlList select ProcessURL(url, client, ct)).ToList();
             this.ViewModel.ResetProgres();
-            dataFetchingProgressBar.Visibility = Visibility.Visible;
+            RatesProgresRing.Visibility = Visibility.Visible;
             ProgressTextBox.Visibility = Visibility.Visible;
             this.ViewModel.SetProgressInterval(Convert.ToInt32(Math.Ceiling(100D / downloadTasks.Count())));
             while (downloadTasks.Count > 0)
@@ -193,12 +179,13 @@ namespace NBPClient
                 await firstFinishedTask.ContinueWith((t) =>
                 {
                     this.ViewModel.CurrenciesSet(t.Result);
-                    dataFetchingProgressBar.Visibility = Visibility.Collapsed;
-                    ProgressTextBox.Visibility = Visibility.Collapsed;
+                  
                     this.ViewModel.UpdateProgress();
                 
                 },TaskScheduler.FromCurrentSynchronizationContext());
             }
+            RatesProgresRing.Visibility = Visibility.Collapsed;
+            ProgressTextBox.Visibility = Visibility.Collapsed;
         }
 
         async Task<List<RateMode>> ProcessURL(string url, HttpClient client, CancellationToken ct)
@@ -214,12 +201,10 @@ namespace NBPClient
             }
             else
             {
-                this.ViewModel.ErrorText = "Wrong date!";
+                this.ViewModel.SetErrorText("Error");
                 return new List<RateMode>();
             }
         }
-      
-
       
         private void BackButtonClick(object sender, RoutedEventArgs e)
         {
@@ -241,7 +226,7 @@ namespace NBPClient
 
         private void CloseButtonClick(object sender, RoutedEventArgs e)
         {
-
+            Application.Current.Exit();
         }
 
         private  async void SaveChartButtonClick(object sender, RoutedEventArgs e)
@@ -250,10 +235,9 @@ namespace NBPClient
             RenderTargetBitmap bitmap2 = new RenderTargetBitmap();
              await bitmap2.RenderAsync(LineChartStackPanel, (int)LineChartStackPanel.ActualWidth, (int)LineChartStackPanel.ActualHeight);
             var res = await bitmap2.GetPixelsAsync();
-           
             try
             {
-                if (EnsureUnsnapped())
+            if (EnsureUnsnapped())
             {
                
                 FileSavePicker savePicker = new FileSavePicker();

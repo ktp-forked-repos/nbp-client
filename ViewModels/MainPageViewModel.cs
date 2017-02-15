@@ -1,23 +1,44 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace NBPClient.ViewModels
 {
-    public class MainPageViewModel
+    public class MainPageViewModel : INotifyPropertyChanged
     {
         private ObservableCollection<CurrencyModel> currencies = new ObservableCollection<CurrencyModel>();
+
+        public event PropertyChangedEventHandler PropertyChanged= delegate { };
+
         public DateTime CurrenciesDate { get; set; }
-        public string WrongDateAlert { get; set; }
+        private string wrongDateAlert;
+        public string WrongDateAlert {
+            get {
+                return wrongDateAlert;
+                }
+            set {
+                wrongDateAlert = value;
+                OnPropertyChanged();
+            }
+        }
         public DateTime CurrentDate { get; set; }
         public System.Nullable<DateTimeOffset> Date { get; set; }
         public ObservableCollection<CurrencyModel> Currencies { get { return this.currencies; } }
         public MainPageViewModel()
         {
             WrongDateAlert = "";
+        }
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
         }
 
         public void SetDate(DateTime _date)
@@ -28,7 +49,11 @@ namespace NBPClient.ViewModels
 
         public void SetWrongDateAlert()
         {
-            this.WrongDateAlert = "No data for this date " + this.CurrentDate.ToString("yyyy-MM-dd") + "choose diffrent date";
+            this.WrongDateAlert = "No data for this date " + this.CurrentDate.ToString("yyyy-MM-dd") + " choose diffrent date";
+        }
+        public void SetErrorAlert()
+        {
+            this.WrongDateAlert = "Connection can not be established";
         }
         public void ResetWrongDataAlert()
         {
