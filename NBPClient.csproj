@@ -97,6 +97,7 @@
     </Compile>
     <Compile Include="Controls\CustomCalendarDatePicker.cs" />
     <Compile Include="Core\Constants\Constants.cs" />
+    <Compile Include="Core\Infrastructure\DateValidator.cs" />
     <Compile Include="Core\Infrastructure\LinqExtensions.cs" />
     <Compile Include="Core\Infrastructure\UrlBuilder.cs" />
     <Compile Include="DetailsPage.xaml.cs">

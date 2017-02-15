@@ -9,34 +9,45 @@
     mc:Ignorable="d">
     <Page.TopAppBar>
         <CommandBar  >
-            <AppBarToggleButton Click="AppBarToggleButton_Click_1" Icon="Back" Label="Repeat"/>
-            <AppBarToggleButton Click="AppBarToggleButton_Click_2" Icon="Delete" Label="Repeat"/>
+            <AppBarToggleButton Click="BackButtonClick" Icon="Back" Label="Repeat"/>
+            <AppBarToggleButton Click="CloseButtonClick" Icon="Delete" Label="Repeat"/>
         </CommandBar>
     </Page.TopAppBar>
     <StackPanel Orientation="Vertical">
-        <ProgressBar Width="200"       
+        <StackPanel Width="auto" Margin="10 10 10 10" Orientation="Horizontal" Height="auto"> 
+        <local:CustomCalendarDatePicker Margin="10 10 10 10" DateChanged="StartDateChanged"  Header="Start date"  ></local:CustomCalendarDatePicker>
+        <CalendarDatePicker DateChanged="EndDateChanged" Margin="10 10 10 10" Header="End date" RenderTransformOrigin="0,1"></CalendarDatePicker>
+     
+        </StackPanel>
+     
+        <StackPanel VerticalAlignment="Bottom"  HorizontalAlignment="Left" x:Name="LineChartStackPanel" Orientation="Vertical">
+            <ProgressBar Width="200"       
             x:Name="dataFetchingProgressBar"
             Foreground="#FF8B64C3"
                      Minimum="0"
-            Value="{x:Bind ViewModel.ProgressBardProgess, Mode=TwoWay }" 
-                    
+            Value="{x:Bind ViewModel.ProgressBardProgess, Mode=OneWay }" 
+             Visibility="Collapsed" 
             Maximum="100" 
             BorderBrush="#FF411F72" 
             BorderThickness="1"/>
-        <TextBlock x:Name="dateErrorTextBlock2" Text="{x:Bind ViewModel.ProgressBardProgess, Mode=TwoWay}" />
-        <local:CustomCalendarDatePicker DateChanged="StartDateChanged"  Header="Start date"  ></local:CustomCalendarDatePicker>
-        <CalendarDatePicker DateChanged="EndDateChanged" Header="End date" RenderTransformOrigin="0,1"></CalendarDatePicker>
-        <StackPanel x:Name="LineChartStackPanel">
-        <Charting:Chart x:Name="LineChart" HorizontalAlignment="Center" VerticalAlignment="Top" Width="600" Height="400">
-        <Charting:LineSeries Title="Currecy" Margin="0"  IndependentValuePath="EffectiveDate" DependentValuePath="Mid" IsSelectionEnabled="True"/>
-        </Charting:Chart>
+            <TextBlock x:Name="WrongDateTextBox" Width="200" Visibility="Visible"  />
+            <TextBlock x:Name="ProgressTextBox" Width="200" Visibility="Collapsed" Text="{x:Bind ViewModel.ProgressBardProgess, Mode=OneWay}" />
+            <ProgressRing IsActive="{x:Bind ViewModel.ProgressBarActive, Mode=OneWay}" Height="50" Width="50" x:Name="RatesProgresRing"/>
+            <Charting:Chart x:Name="LineChart" HorizontalAlignment="Center" VerticalAlignment="Top" Width="600" Height="400">
+                <Charting:LineSeries Title="Currecy" Margin="0" ItemsSource="{x:Bind ViewModel.Currencies }"   IndependentValuePath="EffectiveDate" 
+                                     DependentValuePath="Mid" IsSelectionEnabled="False" >
+                    <Charting:LineSeries.DataPointStyle>
+                        <Style TargetType="Charting:LineDataPoint">
+                            <Setter Property="Template" Value="{x:Null}" />
+                        </Style>
+                    </Charting:LineSeries.DataPointStyle>
+                </Charting:LineSeries>
+            </Charting:Chart>
         </StackPanel>
-        <Button Click="Button_Click" Name="Nav"  />
-        <Button x:Name="button" Content="Button" HorizontalAlignment="Left" Margin="478,138,0,0" VerticalAlignment="Top" Click="button_Click_1"/>
-    </StackPanel>
+     </StackPanel>
     <Page.BottomAppBar>
         <CommandBar  >
-            <AppBarToggleButton Click="AppBarToggleButton_Click_3" Icon="Save" Label="Repeat" Checked="AppBarToggleButton_Checked"/>
+            <AppBarToggleButton Name="SaveChartButton" Click="SaveChartButtonClick" Icon="Save" Label="Repeat" />
         </CommandBar>
     </Page.BottomAppBar>
 </Page>

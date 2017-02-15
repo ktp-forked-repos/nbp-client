@@ -12,8 +12,8 @@
             <AppBarToggleButton Click="AppBarToggleButton_Click" Icon="Edit" Label="Repeat"/>
         </CommandBar>
     </Page.TopAppBar>
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" x:Name="MainGrid">
-        <VisualStateManager.VisualStateGroups>
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" HorizontalAlignment="Left" x:Name="MainGrid">
+        <!--<VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
                 <VisualState x:Name="WideState">
                     <VisualState.StateTriggers>
@@ -44,18 +44,17 @@
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
-        </VisualStateManager.VisualStateGroups>
+        </VisualStateManager.VisualStateGroups>-->
 
         <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-            <ColumnDefinition/>
+            <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition/>
-            <RowDefinition/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition />
         </Grid.RowDefinitions>
 
-        <Grid  x:Name="SecondGrid" Grid.Column="1" Grid.Row="0" Background="#0078d7" >
+        <Grid  x:Name="SecondGrid" Grid.Column="0" Grid.Row="1" Background="#0078d7"  HorizontalAlignment="Left"  >
             <ProgressRing IsActive="True" Height="100" Width="100" x:Name="CurrencieProgresRing"/>
             <ListView ItemClick="CurrencySelectedItemClick" IsItemClickEnabled="True"  ItemsSource="{x:Bind ViewModel.Currencies}"
                   HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -72,12 +71,11 @@
                 </ListView.ItemTemplate>
             </ListView> 
         </Grid>
-        <Grid x:Name="FirstGrid" Grid.Column="0" Grid.Row="0" Background="#107C10" >
-            <StackPanel Orientation="Vertical" >
+        <Grid x:Name="FirstGrid" Grid.Column="0" Grid.Row="0" Background="#107C10"  HorizontalAlignment="Center"   >
+            <StackPanel Orientation="Vertical"  HorizontalAlignment="Center" Margin="10 10 10 10" >
                 <CalendarDatePicker  Date="{x:Bind ViewModel.Date, Mode=Twoway}" DateChanged="CalendarDatePicker_DateChanged" ></CalendarDatePicker>
                 <TextBlock x:Name="dateErrorTextBlock" Text="{x:Bind  ViewModel.WrongDateAlert, Mode=OneWay}" />
             </StackPanel>
             </Grid>
-
         </Grid>
 </Page>

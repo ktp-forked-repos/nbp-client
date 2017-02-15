@@ -29,12 +29,12 @@ namespace NBPClient.Core.Infrastructure
         private static List<int> GetIntervals(int totalDays)
         {
             var lista = new List<int>();
-            if (totalDays > 10)
+            if (totalDays > Constants.Constants.NumOfDates)
             {
-                while (totalDays > 10)
+                while (totalDays > Constants.Constants.NumOfDates)
                 {
-                    lista.Add(10);
-                    totalDays -= 10;
+                    lista.Add(Constants.Constants.NumOfDates);
+                    totalDays -= Constants.Constants.NumOfDates;
                 }
                 lista.Add(System.Convert.ToInt32(totalDays));
                 return lista;

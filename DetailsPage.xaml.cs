@@ -47,138 +47,189 @@ namespace NBPClient
         public  DetailsPageViewModel ViewModel;
         public DetailPageParametersModel parameters;
         CancellationTokenSource cts;
-        AppSettings appSetttings;
+        AppSettings AppSetttings { get; set; }
         
         public DetailsPage()
         {
-           
             this.InitializeComponent();
             this.ViewModel = new DetailsPageViewModel();
             this.Loaded += DetailsPage_Loaded;
-            appSetttings = (App.Current as App).appSettings;
-            SetInitialData();
+            ReadAppSettings();
+        }
+        public void ReadAppSettings()
+        {
+            AppSetttings = (App.Current as App).appSettings;
+        }
+        public async Task SetInitialDate()
+        {
+            if (AppSetttings.HasStartDateOnSecondPage())
+            {
+                this.ViewModel.StartDate = this.AppSetttings.StartDateOnSecondPage;
+            }
+            if (AppSetttings.HasEndDateOnSecondPage())
+            {
+                this.ViewModel.EndDate = this.AppSetttings.EndDateOnSecondPage;
+            }
+            if (AppSetttings.HasCurrencCode())
+            {
+                this.ViewModel.CurrencyCode = AppSetttings.CurrencyCode;
+            }
+            if (AppSetttings.HasTable())
+            {
+                this.ViewModel.Table = AppSetttings.Table;
+            }
+            await Do();
 
         }
-        public void SetInitialData()
+        protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
-            if(this.appSetttings!= null)
+            if (e.Parameter == "")
             {
-               
+              await  SetInitialDate();
             }
-           
-        }
-        protected override void OnNavigatedTo(NavigationEventArgs e)
-        {
-            parameters = (DetailPageParametersModel)e.Parameter;
+            else
+            {
+                parameters = (DetailPageParametersModel)e.Parameter;
+
+                AppSetttings.CurrencyCode = parameters.CurrencyCode;
+                AppSetttings.Table = parameters.Table;
+                AppSetttings.LastOpenPage = "DetailsPage";
+
+            }
             base.OnNavigatedTo(e);
         }
         protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
         {
-         
-            parameters = (DetailPageParametersModel)e.Parameter;
+            if (e.Parameter != null)
+            {
+                parameters = (DetailPageParametersModel)e.Parameter;
+                AppSetttings.CurrencyCode = parameters.CurrencyCode;
+                AppSetttings.Table = parameters.Table;
+            }
             base.OnNavigatingFrom(e);
-
         }
+
         private async void DetailsPage_Loaded(object sender, RoutedEventArgs e)
         {
             LoadChartContents();
-    
+            // ReadAppSettings();
+            if (parameters == null)
+            {
+                await SetInitialDate();
+            }
+            else
+            {
+                this.ViewModel.Table = parameters.Table;
+                this.ViewModel.CurrencyCode = parameters.CurrencyCode;
+            }
+
         }
         private void LoadChartContents()
         {
            
-            (LineChart.Series[0] as LineSeries).ItemsSource = this.ViewModel.Currencies;
-
-            ((LineSeries)LineChart.Series[0]).DependentRangeAxis = new LinearAxis()
-            {
-                Maximum = 4.5,
-                Minimum = 2.5,
-                
-                Orientation = AxisOrientation.Y,
-                Interval = 0.1,
-                ShowGridLines = true,
-            };
+           // (LineChart.Series[0] as LineSeries).ItemsSource = this.ViewModel.Currencies;
+            ((LineSeries)LineChart.Series[0]).DependentRangeAxis = this.ViewModel.ChartAxis;
            
-        }
-
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-
         }
 
         private void button_Click_1(object sender, RoutedEventArgs e)
         {
-            this.Frame.Navigate(typeof(DetailsPage));
+            this.Frame.Navigate(typeof(MainPage));
         }
 
         private async void StartDateChanged(CalendarDatePicker sender, CalendarDatePickerDateChangedEventArgs args)
         {
             this.ViewModel.StartDate = sender.Date.Value.Date;
+            AppSetttings.SetStartDateOnSecondPage(sender.Date.Value.Date);
+            this.ViewModel.ErrorText = "";
+            await Do();
+        }
+        public async Task Do()
+        {
             cts = new CancellationTokenSource();
-            if (this.ViewModel.StartDate != null && this.ViewModel.EndDate != null)
+            if (DateValidator.CheckDateRange(ViewModel.StartDate, ViewModel.EndDate, () => this.ViewModel.ErrorText = "Wrong date"))
             {
-              //  await AccessTheWebAsync(cts.Token);
+                this.ViewModel.Currencies.Clear();
+                await AccessTheWebAsync(cts.Token).ConfigureAwait(false);
             }
             cts = null;
         }
-
         private  async void EndDateChanged(CalendarDatePicker sender, CalendarDatePickerDateChangedEventArgs args)
         {
             this.ViewModel.EndDate = sender.Date.Value.Date;
+            this.ViewModel.ErrorText = "";
+            AppSetttings.SetEndDateOnSecondPage(sender.Date.Value.Date);
             cts = new CancellationTokenSource();
-            if (this.ViewModel.StartDate != null && this.ViewModel.EndDate != null)
+            if (DateValidator.CheckDateRange(ViewModel.StartDate, ViewModel.EndDate, () => this.ViewModel.ErrorText = "Wrong date"))
             {
-                await AccessTheWebAsync(cts.Token);
+                this.ViewModel.Currencies.Clear();
+                await AccessTheWebAsync(cts.Token).ContinueWith((t) =>
+                {
+                    this.ViewModel.HideProgress();
+                    RatesProgresRing.IsActive = false;
+                    dataFetchingProgressBar.Visibility = Visibility.Collapsed;
+                }, TaskScheduler.FromCurrentSynchronizationContext());
+
             }
             cts = null;
         }
 
         async Task AccessTheWebAsync(CancellationToken ct)
         {
+            RatesProgresRing.IsActive = true;
             HttpClient client = new HttpClient();
-            List<string> urlList = UrlBuilder.SetUpURLList(Convert.ToInt32((this.ViewModel.EndDate - this.ViewModel.StartDate).TotalDays),parameters.Table,  parameters.CurrencyCode, this.ViewModel.StartDate);
+            List<string> urlList = UrlBuilder.SetUpURLList(Convert.ToInt32((this.ViewModel.EndDate - this.ViewModel.StartDate).Value.TotalDays),ViewModel.Table,  ViewModel.CurrencyCode, this.ViewModel.StartDate.Value);
           
             List<Task<List<RateMode>>> downloadTasks = (from url in urlList select ProcessURL(url, client, ct)).ToList();
-            this.ViewModel.ProgressBardProgess = 0;
-            double progressBarInterval = Math.Ceiling(100D / downloadTasks.Count());
+            this.ViewModel.ResetProgres();
+            dataFetchingProgressBar.Visibility = Visibility.Visible;
+            ProgressTextBox.Visibility = Visibility.Visible;
+            this.ViewModel.SetProgressInterval(Convert.ToInt32(Math.Ceiling(100D / downloadTasks.Count())));
             while (downloadTasks.Count > 0)
             {
                 Task<List<RateMode>> firstFinishedTask = await Task.WhenAny(downloadTasks);
 
-                await firstFinishedTask.ContinueWith((t) =>
-                 {
-                     this.ViewModel.CurrenciesSet(t.Result);
-                     if (this.ViewModel.ProgressBardProgess + progressBarInterval <= 100)
-                     {
-                         this.ViewModel.ProgressBardProgess += progressBarInterval;
-                     }
-                     else
-                     {
-                         this.ViewModel.ProgressBardProgess = 100;
-                     }
-                 }, TaskScheduler.FromCurrentSynchronizationContext());
-
                 downloadTasks.Remove(firstFinishedTask);
-              
+                await firstFinishedTask.ContinueWith((t) =>
+                {
+                    this.ViewModel.CurrenciesSet(t.Result);
+                    dataFetchingProgressBar.Visibility = Visibility.Collapsed;
+                    ProgressTextBox.Visibility = Visibility.Collapsed;
+                    this.ViewModel.UpdateProgress();
+                
+                },TaskScheduler.FromCurrentSynchronizationContext());
             }
         }
+
         async Task<List<RateMode>> ProcessURL(string url, HttpClient client, CancellationToken ct)
         {
-            HttpResponseMessage response = await client.GetAsync(url, ct);
-            string a  = await response.Content.ReadAsStringAsync();
-            var json = JObject.Parse(a).ToString();
-            var list = JsonConvert.DeserializeObject<TableModel2>(json);
-            return list.Rates;
+            HttpResponseMessage response = await client.GetAsync(url, ct).ConfigureAwait(false);
+            string a = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+           
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                var json = JObject.Parse(a).ToString();
+                var list = JsonConvert.DeserializeObject<TableModel2>(json);
+                return list.Rates;
+            }
+            else
+            {
+                this.ViewModel.ErrorText = "Wrong date!";
+                return new List<RateMode>();
+            }
         }
       
 
       
-        private void AppBarToggleButton_Click_1(object sender, RoutedEventArgs e)
+        private void BackButtonClick(object sender, RoutedEventArgs e)
         {
             try
             {
                 Frame rootFrame = Window.Current.Content as Frame;
                 if (rootFrame.CanGoBack)
+                {
+                    this.Frame.Navigate(typeof(MainPage));
+                }else
                 {
                     this.Frame.Navigate(typeof(MainPage));
                 }
@@ -188,12 +239,12 @@ namespace NBPClient
             }
         }
 
-        private void AppBarToggleButton_Click_2(object sender, RoutedEventArgs e)
+        private void CloseButtonClick(object sender, RoutedEventArgs e)
         {
 
         }
 
-        private  async void AppBarToggleButton_Click_3(object sender, RoutedEventArgs e)
+        private  async void SaveChartButtonClick(object sender, RoutedEventArgs e)
         {
 
             RenderTargetBitmap bitmap2 = new RenderTargetBitmap();
@@ -257,23 +308,11 @@ namespace NBPClient
 
         public bool EnsureUnsnapped()
         {
-            // FilePicker APIs will not work if the application is in a snapped state.
-            // If an app wants to show a FilePicker while snapped, it must attempt to unsnap first
             bool unsnapped = ((ApplicationView.Value != ApplicationViewState.Snapped) || ApplicationView.TryUnsnap());
             if (!unsnapped)
             {
-             //   NotifyUser("Cannot unsnap the sample.", NotifyType.StatusMessage);
             }
-
             return unsnapped;
         }
-
-
-        private void AppBarToggleButton_Checked(object sender, RoutedEventArgs e)
-        {
-
-        }
     }
-
-  
 }

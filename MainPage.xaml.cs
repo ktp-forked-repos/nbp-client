@@ -48,6 +48,7 @@ namespace NBPClient
         public void ReadAppSettings()
         {
             AppSettings = (App.Current as App).appSettings;
+            AppSettings.LastOpenPage = "MainPage";
         }
 
         public void SetInitialData()
@@ -89,18 +90,14 @@ namespace NBPClient
         private void CalendarDatePicker_DateChanged(CalendarDatePicker sender, CalendarDatePickerDateChangedEventArgs args)
         {
 
-            if (this.IsSelectedDataValid(sender.Date.Value.Date))
+            if (DateValidator.CheckDate(sender.Date.Value.Date, () => this.ViewModel.SetWrongDateAlert()))
             {
                 this.ViewModel.ResetWrongDataAlert();
                 this.ViewModel.SetDate(sender.Date.Value.Date);
                 this.GetCurrencies();
                 this.AppSettings.SetDateOnFirstPage(sender.Date.Value.Date);
             }
-            else
-            {
-                this.ViewModel.SetWrongDateAlert();
-
-            }
+            
         }
 
 
@@ -129,11 +126,16 @@ namespace NBPClient
             return Core.Constants.Constants.MainPageCurrenciesAdress + this.ViewModel.CurrentDate.ToString("yyyy-MM-dd");
         }
 
-        public bool IsSelectedDataValid(DateTime date )
+        protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
-            return (date > new DateTime(2002, 1, 1) && date <= DateTime.Now)
-                && (date.DayOfWeek != DayOfWeek.Saturday && date.DayOfWeek != DayOfWeek.Sunday);
+            base.OnNavigatedTo(e);
         }
+        protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
+        {
+            base.OnNavigatingFrom(e);
+        }
+
+
     }
   
 }

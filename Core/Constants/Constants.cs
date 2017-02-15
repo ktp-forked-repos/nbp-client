@@ -10,5 +10,6 @@ namespace NBPClient.Core.Constants
     {
         public static string MainPageTable = "a";
         public static string MainPageCurrenciesAdress = "http://api.nbp.pl/api/exchangerates/tables/a/";
+        public static int NumOfDates = 365;
     }
 }
