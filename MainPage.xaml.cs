@@ -22,6 +22,8 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using NBPClient.Core.Infrastructure;
+using NBPClient.Models;
+
 namespace NBPClient
 {
     /// <summary>
@@ -146,6 +148,7 @@ namespace NBPClient
 
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
+            AppSettings.LastOpenPage = "MainPage";
             base.OnNavigatedTo(e);
         }
         protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)

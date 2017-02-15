@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using WinRTXamlToolkit.Controls.DataVisualization.Charting;
 using Windows.UI.Xaml;
+using NBPClient.Models;
 
 namespace NBPClient.ViewModels
 {
@@ -58,8 +59,13 @@ namespace NBPClient.ViewModels
             };
            
         }
-        private RangeObservableCollection<RateMode> currencies = new RangeObservableCollection<RateMode>();
-        public RangeObservableCollection<RateMode> Currencies { get { return this.currencies; } }
+        private RangeObservableCollection<RateModel> currencies = new RangeObservableCollection<RateModel>();
+        private DateTime startDate;
+        private DateTime endDate;
+        public string errorText { get; set; }
+        private double progressBardProgess;
+        private bool isProgressBarActive;
+        public RangeObservableCollection<RateModel> Currencies { get { return this.currencies; } }
         public DateTime StartDate
         {
             get
@@ -73,16 +79,12 @@ namespace NBPClient.ViewModels
                 OnPropertyChanged();
             }
         }
-        private DateTime startDate;
-        private DateTime endDate;
         public DateTime EndDate { get { return endDate; }  set {
                 endDate = value;
                 EndDateOff = new DateTime(value.Year, value.Month, value.Day);
                 OnPropertyChanged(); } }
         public LinearAxis ChartAxis { get; set; }
-        public string errorText { get; set; }
-       
-
+      
         public string ErrorText
         {
             get
@@ -96,21 +98,21 @@ namespace NBPClient.ViewModels
         }    
         public double ProgressBardProgess
         {
-            get { return _ProgressBardProgess; }
+            get { return progressBardProgess; }
             set
             {
-                _ProgressBardProgess = value;
+                progressBardProgess = value;
                 OnPropertyChanged("ProgressBardProgess");
             }
         }
-        private double _ProgressBardProgess;
+
         public event PropertyChangedEventHandler PropertyChanged = delegate { };
         private int ProgressInterval { get; set; }
         public string CurrencyCode { get; internal set; }
         public string Table { get; internal set; }
         public System.Nullable<DateTimeOffset>  StartDateOff { get;  set; }
         public System.Nullable<DateTimeOffset>  EndDateOff { get;  set; }
-        private bool isProgressBarActive;
+       
         private Visibility progressBarVisibility;
         public bool IsProgressBarActive {
             get
@@ -144,7 +146,7 @@ namespace NBPClient.ViewModels
             }
         }
 
-        public void CurrenciesSet(List<RateMode> res)
+        public void CurrenciesSet(List<RateModel> res)
         {
 
             foreach (var item in res)

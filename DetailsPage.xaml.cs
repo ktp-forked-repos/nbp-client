@@ -32,8 +32,9 @@ using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using Windows.UI.Xaml.Shapes;
 using WinRTXamlToolkit.Controls.DataVisualization.Charting;
-using NBPClient.ViewModels;
 using NBPClient.Core.Infrastructure;
+using NBPClient.Infrastructure;
+using NBPClient.Models;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -157,44 +158,44 @@ namespace NBPClient
 
         async Task AccessTheWebAsync(CancellationToken ct)
         {
-           
-            HttpClient client = new HttpClient();
-            List<string> urlList = UrlBuilder.SetUpURLList(Convert.ToInt32((this.ViewModel.EndDate - this.ViewModel.StartDate).TotalDays),ViewModel.Table,  ViewModel.CurrencyCode, ViewModel.StartDate);
-          
-            List<Task<List<RateMode>>> downloadTasks = (from url in urlList select ProcessURL(url, client, ct)).ToList();
-            this.ViewModel.ShowProgressBars();
-            this.ViewModel.SetProgressInterval(Convert.ToInt32(Math.Ceiling(100D / downloadTasks.Count())));
-            while (downloadTasks.Count > 0)
+            try
             {
-                Task<List<RateMode>> firstFinishedTask = await Task.WhenAny(downloadTasks);
-                downloadTasks.Remove(firstFinishedTask);
-                await firstFinishedTask.ContinueWith((t) =>
+                HttpClient client = new HttpClient();
+                List<string> urlList = UrlBuilder.SetUpURLList(Convert.ToInt32((this.ViewModel.EndDate - this.ViewModel.StartDate).TotalDays), ViewModel.Table, ViewModel.CurrencyCode, ViewModel.StartDate);
+                List<Task<List<RateModel>>> downloadTasks = (from url in urlList select WebServiceConsumer.ProcessURL(url, client, ct, () => this.ViewModel.SetErrorText("Error"))).ToList();
+                this.ViewModel.ShowProgressBars();
+                this.ViewModel.SetProgressInterval(Convert.ToInt32(Math.Ceiling(100D / downloadTasks.Count())));
+                /*  Task<List<RateModel>> task1 = downloadTasks.First();
+                  await task1.ContinueWith((t) =>
+                  {
+                      this.ViewModel.CurrenciesSet(t.Result);
+                      this.ViewModel.UpdateProgress();
+
+                  }, TaskScheduler.FromCurrentSynchronizationContext());*/
+                while (downloadTasks.Count > 0)
                 {
-                    this.ViewModel.CurrenciesSet(t.Result);
-                    this.ViewModel.UpdateProgress();
-                
-                },TaskScheduler.FromCurrentSynchronizationContext());
+                    Task<List<RateModel>> firstFinishedTask = await Task.WhenAny(downloadTasks);
+                    downloadTasks.Remove(firstFinishedTask);
+                    await firstFinishedTask.ContinueWith((t) =>
+                    {
+                    
+                        this.ViewModel.CurrenciesSet(Randomizer.RandomArrayEntries(t.Result, 10));
+                        this.ViewModel.UpdateProgress();
+
+                    }, TaskScheduler.FromCurrentSynchronizationContext());
+                }
+                this.ViewModel.HideProgress();
             }
-            this.ViewModel.HideProgress();
+            catch(AggregateException aggex)
+            {
+                this.ViewModel.HideProgress();
+                this.ViewModel.SetErrorText("Connection can not be established");
+            }
+            catch(Exception ex)
+            {
+            }
         }
 
-        async Task<List<RateMode>> ProcessURL(string url, HttpClient client, CancellationToken ct)
-        {
-            HttpResponseMessage response = await client.GetAsync(url, ct).ConfigureAwait(false);
-            string a = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-            if (response.StatusCode == System.Net.HttpStatusCode.OK)
-            {
-                var json = JObject.Parse(a).ToString();
-                var list = JsonConvert.DeserializeObject<TableModel2>(json);
-                return list.Rates;
-            }
-            else
-            {
-                this.ViewModel.SetErrorText("Error");
-                return new List<RateMode>();
-            }
-        }
-      
         private void BackButtonClick(object sender, RoutedEventArgs e)
         {
             try

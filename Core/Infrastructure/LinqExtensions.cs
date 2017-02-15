@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using NBPClient.ViewModels;
+using NBPClient.Models;
+
 namespace NBPClient.Core.Infrastructure
 {
     public static class LinqExtensions

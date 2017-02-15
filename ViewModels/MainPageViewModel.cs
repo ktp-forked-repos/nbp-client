@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NBPClient.Models;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -12,11 +13,8 @@ namespace NBPClient.ViewModels
     public class MainPageViewModel : INotifyPropertyChanged
     {
         private ObservableCollection<CurrencyModel> currencies = new ObservableCollection<CurrencyModel>();
-
-        public event PropertyChangedEventHandler PropertyChanged= delegate { };
-
-        public DateTime CurrenciesDate { get; set; }
         private string wrongDateAlert;
+        public DateTime CurrenciesDate { get; set; }
         public string WrongDateAlert {
             get {
                 return wrongDateAlert;
@@ -29,6 +27,7 @@ namespace NBPClient.ViewModels
         public DateTime CurrentDate { get; set; }
         public System.Nullable<DateTimeOffset> Date { get; set; }
         public ObservableCollection<CurrencyModel> Currencies { get { return this.currencies; } }
+        public event PropertyChangedEventHandler PropertyChanged = delegate { };
         public MainPageViewModel()
         {
             WrongDateAlert = "";

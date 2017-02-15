@@ -1,4 +1,5 @@
-﻿using NBPClient.ViewModels;
+﻿using NBPClient.Models;
+using NBPClient.ViewModels;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -14,13 +15,9 @@ namespace NBPClient.Infrastructure
     public class WebServiceConsumer
     {
         static HttpClient client = new HttpClient();
-        CancellationTokenSource cts;
         public static async Task<List<CurrencyModel>> GetCurrency(string path, Action onComplete)
         {
-            //try
-            //{
                 HttpResponseMessage response = await client.GetAsync(path);
-
                 if (response.StatusCode != System.Net.HttpStatusCode.OK)
                 {
                     return new List<CurrencyModel>();
@@ -33,29 +30,43 @@ namespace NBPClient.Infrastructure
                     var list = JsonConvert.DeserializeObject<TableModel>(json);
                     return list.Rates;
                 }
-            //}catch(Exception ex)
-            //{
-            //    var expection = ex;
-            //    return new List<CurrencyModel>();
-            //}
-           
         }
-        public static async Task<List<RateMode>> GetRates(string path)
+        public static async Task<List<RateModel>> GetRates(string path)
         {
 
             HttpResponseMessage response = await client.GetAsync(path);
 
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                return new List<RateMode>();
+                return new List<RateModel>();
             }
             else
             {
                 string a = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 var json = JObject.Parse(a).ToString();
-                var list = JsonConvert.DeserializeObject<TableModel2>(json);
+                var list = JsonConvert.DeserializeObject<SecondPageTableModel>(json);
                 return list.Rates;
             }
         }
+
+
+       public static async Task<List<RateModel>> ProcessURL(string url, HttpClient client, CancellationToken ct, Action OnFailure)
+        {
+            HttpResponseMessage response = await client.GetAsync(url, ct).ConfigureAwait(false);
+            string resContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                var json = JObject.Parse(resContent).ToString();
+                var list = JsonConvert.DeserializeObject<SecondPageTableModel>(json);
+                return list.Rates;
+            }
+            else
+            {
+               
+                OnFailure();
+                return new List<RateModel>();
+            }
+        }
+
     }
 }
