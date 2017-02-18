@@ -56,7 +56,6 @@ namespace NBPClient
                 this.ViewModel = new DetailsPageViewModel();
                 this.Loaded += DetailsPage_Loaded;
                 ReadAppSettings();
-       
         }
         public void ReadAppSettings()
         {
@@ -92,12 +91,11 @@ namespace NBPClient
             else
             {
                 parameters = (DetailPageParametersModel)e.Parameter;
-
                 AppSetttings.CurrencyCode = parameters.CurrencyCode;
                 AppSetttings.Table = parameters.Table;
-                AppSetttings.LastOpenPage = "DetailsPage";
-
             }
+
+            AppSetttings.LastOpenPage = "DetailsPage";
             base.OnNavigatedTo(e);
         }
         protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
@@ -107,7 +105,9 @@ namespace NBPClient
                 parameters = (DetailPageParametersModel)e.Parameter;
                 AppSetttings.CurrencyCode = parameters.CurrencyCode;
                 AppSetttings.Table = parameters.Table;
+        
             }
+            AppSetttings.LastOpenPage = "DetailsPage";
             base.OnNavigatingFrom(e);
         }
 
@@ -123,7 +123,7 @@ namespace NBPClient
                 this.ViewModel.Table = parameters.Table;
                 this.ViewModel.CurrencyCode = parameters.CurrencyCode;
             }
-
+            
         }
         private void LoadChartContents()
         {
@@ -141,7 +141,7 @@ namespace NBPClient
         public async Task Do()
         {
             cts = new CancellationTokenSource();
-            if (DateValidator.CheckDateRange(ViewModel.StartDate, ViewModel.EndDate, () => this.ViewModel.ErrorText = "Wrong date"))
+            if (DateValidator.CheckDateRange(ViewModel.StartDate, ViewModel.EndDate, () => this.ViewModel.ErrorText = "Change date"))
             {
                 this.ViewModel.Currencies.Clear();
                 await AccessTheWebAsync(cts.Token).ConfigureAwait(false);
@@ -165,21 +165,14 @@ namespace NBPClient
                 List<Task<List<RateModel>>> downloadTasks = (from url in urlList select WebServiceConsumer.ProcessURL(url, client, ct, () => this.ViewModel.SetErrorText("Error"))).ToList();
                 this.ViewModel.ShowProgressBars();
                 this.ViewModel.SetProgressInterval(Convert.ToInt32(Math.Ceiling(100D / downloadTasks.Count())));
-                /*  Task<List<RateModel>> task1 = downloadTasks.First();
-                  await task1.ContinueWith((t) =>
-                  {
-                      this.ViewModel.CurrenciesSet(t.Result);
-                      this.ViewModel.UpdateProgress();
-
-                  }, TaskScheduler.FromCurrentSynchronizationContext());*/
                 while (downloadTasks.Count > 0)
                 {
                     Task<List<RateModel>> firstFinishedTask = await Task.WhenAny(downloadTasks);
                     downloadTasks.Remove(firstFinishedTask);
                     await firstFinishedTask.ContinueWith((t) =>
                     {
-                    
-                        this.ViewModel.CurrenciesSet(Randomizer.RandomArrayEntries(t.Result, 10));
+                        var res = t.Result;
+                        this.ViewModel.CurrenciesSet(Randomizer.RandomArrayEntries(res, 10));
                         this.ViewModel.UpdateProgress();
 
                     }, TaskScheduler.FromCurrentSynchronizationContext());
@@ -193,28 +186,21 @@ namespace NBPClient
             }
             catch(Exception ex)
             {
+                this.ViewModel.HideProgress();
+                this.ViewModel.SetErrorText("Connection can not be established");
             }
         }
 
         private void BackButtonClick(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                Frame rootFrame = Window.Current.Content as Frame;
-                if (rootFrame.CanGoBack)
-                {
-                    this.Frame.Navigate(typeof(MainPage));
-                }else
-                {
-                    this.Frame.Navigate(typeof(MainPage));
-                }
-            }catch(Exception ex)
-            {
-            }
+            Frame rootFrame = Window.Current.Content as Frame;
+            this.Frame.Navigate(typeof(MainPage));
         }
 
-        private void CloseButtonClick(object sender, RoutedEventArgs e)
+        private async void CloseButtonClick(object sender, RoutedEventArgs e)
         {
+            var app= Application.Current as App;
+            await app.SaveStateAsync();
             Application.Current.Exit();
         }
 
@@ -222,61 +208,44 @@ namespace NBPClient
         {
 
             RenderTargetBitmap bitmap2 = new RenderTargetBitmap();
-             await bitmap2.RenderAsync(LineChartStackPanel, (int)LineChartStackPanel.ActualWidth, (int)LineChartStackPanel.ActualHeight);
+            await bitmap2.RenderAsync(LineChartStackPanel, (int)LineChartStackPanel.ActualWidth, (int)LineChartStackPanel.ActualHeight);
             var res = await bitmap2.GetPixelsAsync();
             try
             {
-            if (EnsureUnsnapped())
-            {
-               
-                FileSavePicker savePicker = new FileSavePicker();
-                    savePicker.DefaultFileExtension = ".png";
-                    savePicker.FileTypeChoices.Add(".png", new List<string> { ".png" });
-                    savePicker.SuggestedStartLocation = PickerLocationId.PicturesLibrary;
-                    savePicker.SuggestedFileName = "snapshot.png";
-
-                    StorageFile file = await savePicker.PickSaveFileAsync();
-                    if (file == null)
+                    if (EnsureUnsnapped())
                     {
-                        return;
-                      
-                    }
-                    using (var fileStream = await file.OpenAsync(FileAccessMode.ReadWrite))
-                    {
-                        var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, fileStream);
-
-                        encoder.SetPixelData(
-                            BitmapPixelFormat.Rgba8,
-                            BitmapAlphaMode.Premultiplied,
-                            (uint)bitmap2.PixelWidth,
-                            (uint)bitmap2.PixelHeight,
-                            DisplayInformation.GetForCurrentView().LogicalDpi,
-                            DisplayInformation.GetForCurrentView().LogicalDpi,
-                            res.ToArray());
-
-                        await encoder.FlushAsync();
-                        using (var outputStream = fileStream.GetOutputStreamAt(0))
-                        {
-                            await outputStream.FlushAsync();
-                            
+                                FileSavePicker savePicker = new FileSavePicker();
+                                savePicker.DefaultFileExtension = ".png";
+                                savePicker.FileTypeChoices.Add(".png", new List<string> { ".png" });
+                                savePicker.SuggestedStartLocation = PickerLocationId.PicturesLibrary;
+                                savePicker.SuggestedFileName = "snapshot.png";
+                                StorageFile file = await savePicker.PickSaveFileAsync();
+                                if (file == null)
+                                {
+                                    return;
+                                }
+                                using (var fileStream = await file.OpenAsync(FileAccessMode.ReadWrite))
+                                {
+                                    var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, fileStream);
+                                    encoder.SetPixelData(
+                                        BitmapPixelFormat.Rgba8,
+                                        BitmapAlphaMode.Premultiplied,
+                                        (uint)bitmap2.PixelWidth,
+                                        (uint)bitmap2.PixelHeight,
+                                        DisplayInformation.GetForCurrentView().LogicalDpi,
+                                        DisplayInformation.GetForCurrentView().LogicalDpi,
+                                        res.ToArray());
+                                    await encoder.FlushAsync();
+                                    using (var outputStream = fileStream.GetOutputStreamAt(0))
+                                    {
+                                        await outputStream.FlushAsync();
+                                    }
+                                }
                         }
-                    }
-
-                }
-                else
-                {
-                   
-                }
-               
             }
             catch (Exception ex)
             {
-
-                var a = ex;
-                var b = 10;
             }
-
-
         }
 
         public bool EnsureUnsnapped()

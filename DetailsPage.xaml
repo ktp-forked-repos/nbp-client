@@ -18,17 +18,15 @@
     <StackPanel Orientation="Vertical">
         <StackPanel Width="auto" Margin="10 10 10 10" Orientation="Horizontal" Height="auto">
             <CalendarDatePicker Margin="10 10 10 10" DateChanged="StartDateChanged"  Header="Start date"  Date="{x:Bind ViewModel.StartDateOff, Mode=Twoway}" ></CalendarDatePicker>
-        <CalendarDatePicker DateChanged="EndDateChanged" Margin="10 10 10 10" Header="End date" RenderTransformOrigin="0,1" Date="{x:Bind ViewModel.EndDateOff, Mode=Twoway}"></CalendarDatePicker>
-     
+             <CalendarDatePicker DateChanged="EndDateChanged" Margin="10 10 10 10" Header="End date" RenderTransformOrigin="0,1" Date="{x:Bind ViewModel.EndDateOff, Mode=Twoway}"></CalendarDatePicker>
         </StackPanel>
-     
         <StackPanel VerticalAlignment="Bottom"  HorizontalAlignment="Left" x:Name="LineChartStackPanel" Orientation="Vertical">
             <ProgressBar Width="200"       
             x:Name="dataFetchingProgressBar"
             Foreground="#FF8B64C3"
-                     Minimum="0"
+            Minimum="0"
             Value="{x:Bind ViewModel.ProgressBardProgess, Mode=OneWay }" 
-             Visibility="{x:Bind  ViewModel.ProgressBarVisibility, Mode=OneWay}"  
+            Visibility="{x:Bind  ViewModel.ProgressBarVisibility, Mode=OneWay}"  
             Maximum="100" 
             BorderBrush="#FF411F72" 
             BorderThickness="1"/>

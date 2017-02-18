@@ -14,7 +14,7 @@ namespace NBPClient.Core.Infrastructure
         {
             var listToReturn = new List<RateModel>();
 
-            if (arrayItems.Count != count)
+            if (arrayItems.Count > count)
             {
                 var deck = CreateShuffledDeck(arrayItems);
 
@@ -35,14 +35,14 @@ namespace NBPClient.Core.Infrastructure
             var random = new Random();
             var list = new List<RateModel>(values);
             var stack = new Stack<RateModel>();
-                while (list.Count > 0)
-                {  // Get the next item at random.
+            while (list.Count > 0)
+            {
                     var randomIndex = random .Next(0, list.Count);
                     var randomItem = list[randomIndex];
-                    // Remove the item from the list and push it to the top of the deck. 
                     list.RemoveAt(randomIndex);
                     stack.Push(randomItem );
-                }  return stack;
+            }
+            return stack;
          }
 
   }

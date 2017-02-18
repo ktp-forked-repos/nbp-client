@@ -105,7 +105,6 @@ namespace NBPClient
             this.CurrencieProgresRing.IsActive = false;
         }
 
-
         private void CalendarDatePicker_DateChanged(CalendarDatePicker sender, CalendarDatePickerDateChangedEventArgs args)
         {
 
@@ -131,8 +130,10 @@ namespace NBPClient
             });
         }
    
-        private void AppBarToggleButton_Click(object sender, RoutedEventArgs e)
+        private async void AppBarToggleButton_Click(object sender, RoutedEventArgs e)
         {
+            var app = Application.Current as App;
+            await app.SaveStateAsync();
             Application.Current.Exit();
         }
 

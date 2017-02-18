@@ -38,6 +38,7 @@ namespace NBPClient
         {
             this.InitializeComponent();
             this.Suspending += OnSuspending;
+            
         }
 
         /// <summary>
@@ -141,7 +142,7 @@ namespace NBPClient
             }
         }
 
-        private async Task SaveStateAsync()
+        public async Task SaveStateAsync()
         {
             var ms = new MemoryStream();
             var serializer = new DataContractSerializer(typeof(AppSettings));

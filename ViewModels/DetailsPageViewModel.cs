@@ -195,12 +195,11 @@ namespace NBPClient.ViewModels
         {
             this.ProgressBarVisibility = Visibility.Collapsed;
             this.IsProgressBarActive = false;
-          
         }
 
         public void SetErrorText(string error)
         {
-            this.errorText = error;
+            this.ErrorText = error;
         }
 
         public void ShowProgressBars()

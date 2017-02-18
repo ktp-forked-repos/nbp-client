@@ -12,7 +12,7 @@
             <AppBarToggleButton Click="AppBarToggleButton_Click" Icon="Delete" Label="Close"/>
         </CommandBar>
     </Page.TopAppBar>
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" HorizontalAlignment="Left" x:Name="MainGrid">
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" HorizontalAlignment="Center" x:Name="MainGrid">
         <!--<VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
                 <VisualState x:Name="WideState">
@@ -54,7 +54,7 @@
             <RowDefinition />
         </Grid.RowDefinitions>
 
-        <Grid  x:Name="SecondGrid" Grid.Column="0" Grid.Row="1" Background="#0078d7"  HorizontalAlignment="Left"  >
+        <Grid  x:Name="SecondGrid" Grid.Column="0" Grid.Row="1"   HorizontalAlignment="Center"  >
             <ProgressRing IsActive="True" Height="100" Width="100" x:Name="CurrencieProgresRing"/>
             <ListView ItemClick="CurrencySelectedItemClick" IsItemClickEnabled="True"  ItemsSource="{x:Bind ViewModel.Currencies}"
                   HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -71,8 +71,8 @@
                 </ListView.ItemTemplate>
             </ListView> 
         </Grid>
-        <Grid x:Name="FirstGrid" Grid.Column="0" Grid.Row="0" Background="#107C10"  HorizontalAlignment="Center"   >
-            <StackPanel Orientation="Horizontal"  HorizontalAlignment="Center" Margin="10 10 10 10" >
+        <Grid x:Name="FirstGrid" Grid.Column="0" Grid.Row="0"  HorizontalAlignment="Center"   >
+            <StackPanel Orientation="Horizontal"  Margin="10 10 10 10" >
                 <CalendarDatePicker Header="Choose date" Date="{x:Bind ViewModel.Date, Mode=Twoway}" DateChanged="CalendarDatePicker_DateChanged" ></CalendarDatePicker>
                 <TextBlock x:Name="DateErrorTextBlock" Text="{x:Bind  ViewModel.WrongDateAlert, Mode=TwoWay}" />
             </StackPanel>
