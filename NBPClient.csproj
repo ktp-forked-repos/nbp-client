@@ -108,6 +108,7 @@
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Models\MoneyModel.cs" />
     <Compile Include="Models\RateModel.cs" />
     <Compile Include="Models\SecondPageTableModel.cs" />
     <Compile Include="Models\TableModel.cs" />

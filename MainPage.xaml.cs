@@ -23,6 +23,8 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using NBPClient.Core.Infrastructure;
 using NBPClient.Models;
+using NBPClient.Core.Constants;
+using WinRTXamlToolkit.Controls.DataVisualization.Charting;
 
 namespace NBPClient
 {
@@ -33,24 +35,24 @@ namespace NBPClient
     {
         private AppSettings AppSettings { get; set; }
         public MainPageViewModel ViewModel { get; set; }
+
         public MainPage()
         {
-            try
-            {
                 this.InitializeComponent();
                 this.InitViewModel();
                 this.ReadAppSettings();
                 this.SetInitialData();
                 this.GetCurrencies();
-            }catch(Exception ex)
-            {
-                this.ViewModel.SetErrorAlert();
-            }
+                this.GetMoney();
+
         }
 
+       
         public void InitViewModel()
         {
             this.ViewModel = new MainPageViewModel();
+            ((LineSeries)MoneyChart.Series[0]).DependentRangeAxis = this.ViewModel.MoneyChartYAxis;
+           // ((LineSeries)MoneyChart.Series[0]).IndependentAxis = this.ViewModel.MoneyChartXAxis;
         }
 
         public void ReadAppSettings()
@@ -61,15 +63,30 @@ namespace NBPClient
 
         public void SetInitialData()
         {
-            if(AppSettings.HasDateOnFirstPage())
+            var dateToSet = AppSettings.HasDateOnFirstPage() ? AppSettings.DateOnFirstPage : DateTime.Now;
+            this.ViewModel.SetDate(dateToSet);
+        }
+        private async void GetMoney()
+        {
+            try
             {
-                this.ViewModel.SetDate(AppSettings.DateOnFirstPage);
-            }else
+                //MoneyProgressRing.IsActive = true;
+                this.ViewModel.Money.Clear();
+                var res = WebServiceConsumer.GetMoney(GetMoneyAddress(), () => { });
+
+                await res.ContinueWith((t) =>
+                {
+                     this.HandleMoneyResults(t.Result);
+                    // this.OnDataComplete();
+                }, TaskScheduler.FromCurrentSynchronizationContext());
+
+            }
+            catch (AggregateException aex)
             {
-                this.ViewModel.SetDate(DateTime.Now);
+                this.ViewModel.SetErrorAlert();
             }
         }
-       
+
         private async void GetCurrencies()
         {
             try
@@ -83,8 +100,9 @@ namespace NBPClient
                     this.OnDataComplete();
                 }, TaskScheduler.FromCurrentSynchronizationContext());
             }
-            catch(AggregateException aggregateEx)
+            catch(AggregateException aex)
             {
+
                 this.ViewModel.SetErrorAlert();
             }
             catch(Exception ex)
@@ -92,7 +110,11 @@ namespace NBPClient
                 this.ViewModel.SetErrorAlert();
             }
         }
-
+        private void HandleMoneyResults(List<MoneyModel> results)
+        {
+            results.ForEach(x => this.ViewModel.Money.Add(x));
+          
+        }
         private void HandleResults(List<CurrencyModel> result)
         {
             result
@@ -110,7 +132,6 @@ namespace NBPClient
 
             if (DateValidator.CheckDate(sender.Date.Value.Date, () => this.ViewModel.SetWrongDateAlert()))
             {
-                
                 this.ViewModel.ResetWrongDataAlert();
                 this.ViewModel.SetDate(sender.Date.Value.Date);
                 this.GetCurrencies();
@@ -136,6 +157,15 @@ namespace NBPClient
             await app.SaveStateAsync();
             Application.Current.Exit();
         }
+        private  void TableButtonClicked(object sender, RoutedEventArgs e)
+        {
+            this.ViewModel.Table = (e.OriginalSource as Button).Content.ToString().ToLower();
+          if(ViewModel.Table == "c")
+            {
+              
+            }
+            this.GetCurrencies();
+        }
 
         private void CurrencyListViewItemClick(object sender, ItemClickEventArgs e)
         {
@@ -144,12 +174,17 @@ namespace NBPClient
 
         private string GetApiAddress()
         {
-            return Core.Constants.Constants.MainPageCurrenciesAdress + this.ViewModel.CurrentDate.ToString("yyyy-MM-dd");
+            return Core.Constants.Constants.MainPageCurrenciesAdress  + this.ViewModel.Table + "/" + this.ViewModel.CurrentDate.ToString("yyyy-MM-dd");
+        }
+
+        private string GetMoneyAddress()
+        {
+            return Core.Constants.Constants.MainPageMoneyAdress;
         }
 
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
-            AppSettings.LastOpenPage = "MainPage";
+            AppSettings.LastOpenPage = Constants.MainPageName;
             base.OnNavigatedTo(e);
         }
         protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
@@ -157,7 +192,24 @@ namespace NBPClient
             base.OnNavigatingFrom(e);
         }
 
-
+      
     }
-  
+
+    public class MyDataTemplateSelector : DataTemplateSelector
+    {
+        public DataTemplate ABListViewDataTempalte { get; set; }
+        public DataTemplate CListViewDataTempalte { get; set; }
+
+        protected override DataTemplate SelectTemplateCore(object item,
+                                                           DependencyObject container)
+        {
+            if (item is CurrencyModel)
+                return ABListViewDataTempalte;
+            if (item is CurrencyModel)
+                return ABListViewDataTempalte;
+
+            return base.SelectTemplateCore(item, container);
+        }
+    }
+
 }

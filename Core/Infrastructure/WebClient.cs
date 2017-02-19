@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -68,5 +69,22 @@ namespace NBPClient.Infrastructure
             }
         }
 
+        public static async Task<List<MoneyModel>> GetMoney(string address, Action onComplete)
+        {
+            HttpResponseMessage response = await client.GetAsync(address);
+            if (response.StatusCode != System.Net.HttpStatusCode.OK)
+            {
+                return new List<MoneyModel>();
+            }else
+            {
+                string prod = await response.Content.ReadAsStringAsync();
+                var json = JArray.Parse(prod);
+                return json.Select(x => new MoneyModel {
+                    Date = ((DateTime)x["data"]),
+                    Price =double.Parse(x["cena"].ToString())
+                }).ToList();
+                
+            }
+        }
     }
 }
