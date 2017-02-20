@@ -6,15 +6,29 @@ using System.Threading.Tasks;
 
 namespace NBPClient.Models
 {
-   
-    public class CurrencyModel
+   public interface ICurrencyModel
+    {
+        
+    }
+    public class CurrencyModel : ICurrencyModel
     {
         public string Currency { get; set; }
         
         public decimal Mid { get; set; }
         public string Code { get; set; }
     }
-   
- 
-   
+    public class ABCurrencyModel :CurrencyModel, ICurrencyModel
+    {
+
+    }
+    public class CCurrencyModel : CurrencyModel, ICurrencyModel
+    {
+        public decimal Ask { get; set; }
+        public decimal Bid { get; set; }
+
+       
+    }
+
+
+
 }

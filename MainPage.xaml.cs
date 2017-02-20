@@ -93,6 +93,8 @@ namespace NBPClient
             {
                 CurrencieProgresRing.IsActive = true;
                 this.ViewModel.Currencies.Clear();
+
+
                 var res = WebServiceConsumer.GetCurrency(GetApiAddress(), () => { });
                 await res.ContinueWith((t) =>
                 {
@@ -160,10 +162,6 @@ namespace NBPClient
         private  void TableButtonClicked(object sender, RoutedEventArgs e)
         {
             this.ViewModel.Table = (e.OriginalSource as Button).Content.ToString().ToLower();
-          if(ViewModel.Table == "c")
-            {
-              
-            }
             this.GetCurrencies();
         }
 
@@ -205,8 +203,8 @@ namespace NBPClient
         {
             if (item is CurrencyModel)
                 return ABListViewDataTempalte;
-            if (item is CurrencyModel)
-                return ABListViewDataTempalte;
+            if (item is CCurrencyModel)
+                return CListViewDataTempalte;
 
             return base.SelectTemplateCore(item, container);
         }

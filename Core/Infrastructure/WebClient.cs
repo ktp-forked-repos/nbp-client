@@ -16,7 +16,7 @@ namespace NBPClient.Infrastructure
     public class WebServiceConsumer
     {
         static HttpClient client = new HttpClient();
-        public static async Task<List<CurrencyModel>> GetCurrency(string path, Action onComplete)
+        public static async Task<List<ICurrencyModel>> GetCurrency(string path, Action onComplete)
         {
                 HttpResponseMessage response = await client.GetAsync(path);
                 if (response.StatusCode != System.Net.HttpStatusCode.OK)
@@ -28,9 +28,29 @@ namespace NBPClient.Infrastructure
                     string prod = await response.Content.ReadAsStringAsync();
                     onComplete();
                     var json = JArray.Parse(prod)[0].ToString();
-                    var list = JsonConvert.DeserializeObject<TableModel>(json);
+                
+                     
+                var list = JsonConvert.DeserializeObject<TableModel>(json);
                     return list.Rates;
                 }
+        }
+        public static async Task<List<CCurrencyModel>> GetCCurrency(string path, Action onComplete)
+        {
+            HttpResponseMessage response = await client.GetAsync(path);
+            if (response.StatusCode != System.Net.HttpStatusCode.OK)
+            {
+                return new List<CCurrencyModel>();
+            }
+            else
+            {
+                string prod = await response.Content.ReadAsStringAsync();
+                onComplete();
+                var json = JArray.Parse(prod)[0].ToString();
+
+
+                var list = JsonConvert.DeserializeObject<TableCModel>(json);
+                return list.Rates;
+            }
         }
         public static async Task<List<RateModel>> GetRates(string path)
         {
