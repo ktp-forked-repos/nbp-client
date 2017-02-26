@@ -12,10 +12,17 @@ namespace NBPClient.Models
     }
     public class CurrencyModel : ICurrencyModel
     {
+        public CurrencyModel()
+        {
+            IsActive = false;
+        }
         public string Currency { get; set; }
         
         public decimal Mid { get; set; }
+        public decimal Ask { get; set; }
+        public decimal Bid { get; set; }
         public string Code { get; set; }
+        public bool IsActive { get; set; }
     }
     public class ABCurrencyModel :CurrencyModel, ICurrencyModel
     {

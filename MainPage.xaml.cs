@@ -93,8 +93,6 @@ namespace NBPClient
             {
                 CurrencieProgresRing.IsActive = true;
                 this.ViewModel.Currencies.Clear();
-
-
                 var res = WebServiceConsumer.GetCurrency(GetApiAddress(), () => { });
                 await res.ContinueWith((t) =>
                 {
